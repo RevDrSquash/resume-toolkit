@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<!--
+  Resume template for build-targeted-resume.
+  Copy this file to the job-application folder, fill in real content, then
+  render to PDF with:
+      python .claude/skills/resume-toolkit/scripts/md_resume_to_pdf.py "<this file>.html" "<output>.pdf"
+
+  Layout rules baked in:
+  - Single-column, sequential DOM order (so ATS parsers extract content in
+    the correct reading order even where flexbox visually right-aligns text).
+  - Real text layer (Chromium-rendered), Helvetica family, MM/YYYY dates.
+  - No tables-for-layout, no icons, no text boxes.
+  - @page is letter, 0.55in/0.6in margins.
+
+  Section order matches the styled output we settled on:
+  Header -> Summary -> Work Experience -> Education -> Skills.
+  The section is titled "Skills" (not "Core Competencies") so ATS parsers
+  reliably detect it as a standard skills-section anchor.
+  (formatting-guide.md prefers Skills before Experience for plain ATS;
+  for the styled HTML default we move Skills to the bottom so
+  the recruiter-facing story leads with experience.)
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>[FULL NAME] - Resume - [COMPANY] - [ROLE]</title>
+<style>
+  :root {
+    --accent: #166534;
+    --accent-soft: #4ade80;
+    --text: #1a1a1a;
+    --muted: #555;
+  }
+  @page { size: letter; margin: 0.55in 0.6in; }
+  * { box-sizing: border-box; }
+  /*
+    Defaults below are tuned to breathe, not to cram — whitespace between
+    bullets and sections is what keeps the page from reading as a wall of
+    text. If the resume overflows the page target, cut words first (see
+    build-targeted-resume + publish-resume). CSS tightening is the last
+    resort, and must not go below these floors:
+        font-size   >= 9.5pt
+        line-height >= 1.25
+        li margin-bottom >= 2px
+  */
+  html, body {
+    margin: 0; padding: 0;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: var(--text);
+    font-size: 10pt;
+    line-height: 1.4;
+    background: #fff;
+  }
+  .page { max-width: 7.3in; margin: 0.55in auto; padding: 0; }
+  @media print { .page { margin: 0; } }
+
+  /* Header */
+  .name {
+    text-align: center;
+    font-size: 30pt;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin: 0 0 6px 0;
+    line-height: 1.05;
+  }
+  .role-line {
+    text-align: center;
+    font-size: 11pt;
+    color: var(--muted);
+    margin: 0 0 6px 0;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .contact {
+    text-align: center;
+    font-size: 10pt;
+    color: var(--text);
+    margin: 0 0 4px 0;
+  }
+  .contact span + span::before {
+    content: " • ";
+    color: var(--accent-soft);
+    margin: 0 4px;
+  }
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--accent-soft);
+    margin: 10px 0 14px 0;
+  }
+
+  /* Sections */
+  section { margin-bottom: 11px; }
+  h2 {
+    color: var(--accent);
+    text-transform: uppercase;
+    font-size: 11pt;
+    letter-spacing: 1.5px;
+    margin: 6px 0 2px 0;
+    font-weight: 700;
+    page-break-after: avoid;       /* keep heading with its content */
+    break-after: avoid;
+  }
+  h2 + .section-rule {
+    border: 0;
+    border-top: 1px solid var(--accent-soft);
+    margin: 0 0 8px 0;
+  }
+  .summary { margin: 0; text-align: left; }
+
+  /* Roles & education entries */
+  .entry { margin: 8px 0 6px 0; page-break-inside: avoid; break-inside: avoid; }
+  .entry-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .entry-title { font-weight: 700; font-size: 10pt; }
+  .entry-dates { font-weight: 600; font-size: 9.5pt; color: var(--text); white-space: nowrap; }
+  .entry-sub { color: var(--muted); font-size: 9.5pt; margin: 0 0 2px 0; }
+  ul.bullets { margin: 3px 0 0 0; padding-left: 16px; }
+  ul.bullets li { margin: 0 0 4px 0; }
+
+  /* Skills */
+  .info-list { margin: 0; padding: 0; list-style: none; }
+  .info-list li { margin: 0 0 2px 0; }
+  .info-list .label {
+    color: var(--accent);
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1 class="name">[FULL NAME]</h1>
+  <div class="role-line">[Mirrored Target Title]</div>
+  <div class="contact">
+    <span>[City, Region, Country]</span>
+    <span>[Phone]</span>
+    <span>[Email]</span>
+  </div>
+  <div class="contact">
+    <span>linkedin.com/in/[handle]</span>
+  </div>
+  <hr class="rule">
+
+  <section>
+    <h2>Summary</h2>
+    <hr class="section-rule">
+    <p class="summary">[3-4 sentences. Sentence 1 mirrors target title + years + core identity. Sentences 2-3 specific high-signal capabilities tied to the role. Optional sentence 4 for scope/scale or recent-focus narrative. Include 1-2 standout role-relevant metrics, not a stack.]</p>
+  </section>
+
+  <section>
+    <h2>Work Experience</h2>
+    <hr class="section-rule">
+
+    <!-- Repeat one .entry block per role, reverse-chronological. -->
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">[Job Title, Employer]</div>
+        <div class="entry-dates">[Mon YYYY - Mon YYYY|Present]</div>
+      </div>
+      <div class="entry-sub">[City, Region]</div>
+      <ul class="bullets">
+        <li>[Verb + skill/context + quantified outcome.]</li>
+        <li>[Verb + skill/context + quantified outcome.]</li>
+        <li>[Verb + skill/context + quantified outcome.]</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Education</h2>
+    <hr class="section-rule">
+    <div class="entry">
+      <div class="entry-head">
+        <div class="entry-title">[Degree, Major]</div>
+        <div class="entry-dates">Graduated YYYY</div>
+      </div>
+      <div class="entry-sub">[Institution]</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Skills</h2>
+    <hr class="section-rule">
+    <ul class="info-list">
+      <li><span class="label">Languages:</span> [comma-separated]</li>
+      <li><span class="label">Backend &amp; Architecture:</span> [comma-separated]</li>
+      <li><span class="label">AI/ML:</span> [comma-separated]</li>
+      <li><span class="label">Cloud &amp; Infrastructure:</span> [comma-separated]</li>
+      <li><span class="label">Data &amp; Async:</span> [comma-separated]</li>
+      <li><span class="label">DevOps &amp; Tooling:</span> [comma-separated]</li>
+      <li><span class="label">Awards:</span> [as applicable]</li>
+    </ul>
+  </section>
+
+</div>
+</body>
+</html>
