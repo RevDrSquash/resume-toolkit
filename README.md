@@ -5,11 +5,12 @@ tailoring and job-application tracking. It parses a job description into a signa
 drafts an ATS-optimized resume, reviews it against the JD, renders an ATS-parseable PDF,
 and keeps a job-applications tracker in sync.
 
-> ⚠️ **Heads-up: this is currently coupled to its author's workspace.** Paths are hardcoded
-> (the plugin expects to live at `.claude/skills/resume-toolkit/`, and several skills read
-> from `Work Experience/` and `Job Applications/` directories at the project root). It works
-> out of the box only if you mirror that layout. Making it portable is on the roadmap — for
-> now, treat it as a reference you'll adapt. PRs welcome.
+> ⚠️ **Heads-up: this is currently coupled to its author's workspace.** Several skills read
+> from `Work Experience/` and `Job Applications/` directories at the project root, and the
+> script-backed steps (PDF rendering, linting) use hardcoded `.claude/skills/resume-toolkit/scripts/…`
+> paths — so those assume a manual install at that exact location. It works out of the box
+> only if you mirror that layout. Making it portable is on the roadmap — for now, treat it as
+> a reference you'll adapt. PRs welcome.
 
 ## Skills
 
@@ -25,6 +26,20 @@ Once loaded, the skills are namespaced under `resume-toolkit:`.
 | `resume-toolkit:update-application-tracker` | Reads/updates the job-applications tracker dashboard. |
 
 ## Install
+
+### Via marketplace (recommended)
+
+The easiest way in. From Claude Code:
+
+```
+/plugin marketplace add RevDrSquash/personal-marketplace
+/plugin install resume-toolkit@personal-marketplace
+```
+
+The plugin loads with its skills namespaced `resume-toolkit:*`. Run `/reload-plugins` if
+they don't appear immediately.
+
+### Manually (git)
 
 This is a skills-directory plugin — no build step. Drop the repo into one of Claude Code's
 skills directories so the `.claude-plugin/plugin.json` manifest is discovered:
@@ -42,6 +57,10 @@ git submodule add https://github.com/RevDrSquash/resume-toolkit.git .claude/skil
 
 Then run `/reload-plugins` (or restart Claude Code) and accept the workspace trust prompt.
 The plugin loads as `resume-toolkit@skills-dir`.
+
+> The script-backed skills (`publish-resume`, the linter) currently resolve their helper
+> scripts at `.claude/skills/resume-toolkit/scripts/…` relative to the project root, so they
+> only work with the manual install at that path. The reasoning-only skills work either way.
 
 ## Python dependencies
 
