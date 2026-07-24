@@ -1,6 +1,6 @@
 ---
 name: extract-job-signals
-description: Parse a job description into a structured signal report (required skills, nice-to-haves, title to mirror, action-skill pairs, knockout questions). Trigger when the user provides a job description URL or pasted text and wants to extract what their resume should target. Output is a markdown signal report.
+description: Parse a job description into a structured signal report (required skills, nice-to-haves, title to mirror, action-skill pairs, knockout questions). Trigger when the user provides a job description URL or pasted text and wants to extract what their resume should target. Writes the full report to a markdown file by default and returns only a high-level summary plus important flags in chat.
 ---
 
 # Extract Job Signals
@@ -29,10 +29,21 @@ Turn a raw job description into a concise, structured report of what an applican
 6. **Identify Likely Knockout Questions.** Flag anything that will likely appear as a yes/no form filter: visa sponsorship, location/remote, security clearance, specific YOE thresholds, degree requirements, on-call willingness.
 7. **Cross-reference industry signals.** Read `.claude/skills/resume-toolkit/reference/industry-signals.md`. List any implicit-but-expected keywords for this role type that are NOT in the JD but recruiters will search for anyway (e.g., a senior SWE role implicitly expects "system design" even if unstated).
 8. **Note red flags.** Anything in the JD that suggests poor fit, unrealistic scope, or potential filter mismatches with the user's background.
+9. **Write the report to a markdown file.** By default, save the full report to a `Signal Report - <Company> - <Job Title>.md` file alongside the job description (typically in the same `Job Applications/<Company>/<Job Title>/` directory the JD came from). Only skip the file and respond inline if the user explicitly asked for the report in chat or there is no obvious directory to write to.
+
+## Output destination
+
+The full structured report is a **file artifact, not a chat dump.** Write it to disk by default (see Process step 9), then keep your chat response short:
+
+- A 1–3 sentence high-level summary (role fit, what the resume must lead with).
+- Any important flags — knockout risks, mismatches, or anything the user must act on before applying.
+- A pointer to the saved file path.
+
+Do **not** paste the entire report back into the conversation when you've written it to a file. The file is the deliverable; the chat response is the briefing.
 
 ## Output format
 
-Always emit these sections, in this order:
+The file must contain these sections, in this order:
 
 ```markdown
 # Signal Report: <Job Title> at <Company>
