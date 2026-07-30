@@ -1,6 +1,11 @@
 ---
 name: job-scout
 description: Discover and shortlist new job postings via OpenPostings saved searches, score them against Work Experience/match-profile.md, fetch exact JDs, ignore rejects, and write Job Applications/Shortlist - <date>.md. Trigger when the user wants to find jobs, run a scout, refresh discoveries, or build a shortlist from OpenPostings. Prefer running as the job-scout subagent so search/JD volume stays out of the main conversation.
+allowed-tools:
+  - "Bash(openpostings *)"
+  - "Bash(python .claude/skills/resume-toolkit/scripts/fetch_jd.py *)"
+  - "Bash(python3 .claude/skills/resume-toolkit/scripts/fetch_jd.py *)"
+  - "Bash(py -3 .claude/skills/resume-toolkit/scripts/fetch_jd.py *)"
 ---
 
 # Job Scout
@@ -21,15 +26,24 @@ CLI usage details live in the bundled OpenPostings skills (`openpostings-search`
 - `Work Experience/match-profile.md` (run `generate-match-profile` if missing)
 - `Job Applications/scout-searches.json` (same)
 
-## Environment (cross-platform — do this once at the start)
+## Environment (cross-platform)
 
-- **Pick the Python interpreter with one probe**, then reuse it for the whole run:
+The block below is executed when this skill loads and its output is inlined here — it reports which Python interpreter exists on this machine:
+
+```!
+if command -v python >/dev/null 2>&1; then echo "PYTHON_CMD: python  ($(python --version 2>&1))"
+elif command -v python3 >/dev/null 2>&1; then echo "PYTHON_CMD: python3  ($(python3 --version 2>&1))"
+elif command -v py >/dev/null 2>&1; then echo "PYTHON_CMD: py -3  ($(py -3 --version 2>&1))"
+else echo "PYTHON_CMD: NOT FOUND -- Python 3 is required; stop and tell the user"
+fi
+```
+
+- **Use the `PYTHON_CMD` reported above verbatim for every Python invocation this run.** Do not retry-and-guess per command (Windows typically has `python`/`py -3` but no `python3`; macOS/Linux typically has `python3`). If the block above still shows a literal ` ```! ` fence (it was not rendered — e.g. this file was loaded via Read instead of skill invocation), run the probe yourself once:
 
   ```bash
-  python --version 2>/dev/null || python3 --version 2>/dev/null || py -3 --version
+  command -v python || command -v python3 || command -v py
   ```
-
-  Use whichever succeeded first (Windows typically has `python`/`py -3` but no `python3`; macOS/Linux typically has `python3`). Do not retry-and-guess per command.
+- **Do not shell-quote the `fetch_jd.py` script path** (it contains no spaces) — invoke it exactly as shown in step 3 so the command matches the pre-approved permission rules.
 - **Any ad-hoc scratch script must force UTF-8 itself** — Windows defaults to cp1252 and will crash on JD text. Start every scratch script with:
 
   ```python
