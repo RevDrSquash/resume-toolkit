@@ -1,6 +1,6 @@
 ---
 name: extract-job-signals
-description: Parse a job description into a structured signal report (required skills, nice-to-haves, title to mirror, action-skill pairs, knockout questions). Trigger when the user provides a job description URL or pasted text and wants to extract what their resume should target. Writes the full report to a markdown file by default and returns only a high-level summary plus important flags in chat.
+description: Parse a job description into a structured signal report (required skills, nice-to-haves, target title, role family, action-skill pairs, knockout questions). Trigger when the user provides a job description URL or pasted text and wants to extract what their resume should target. Writes the full report to a markdown file by default and returns only a high-level summary plus important flags in chat.
 ---
 
 # Extract Job Signals
@@ -21,19 +21,20 @@ Turn a raw job description into a concise, structured report of what an applican
 
 ## Process
 
-1. **Find the title to mirror.** Locate the canonical job title in the JD header. If multiple variants appear (e.g., "Senior AI Engineer" in the header, "Staff ML Engineer" in the apply button), prefer the apply-button/URL version — that's what the recruiter searches on.
-2. **Extract Required Skills.** Pull every hard skill, technology, framework, methodology, and certification listed under "Requirements" / "Must-Haves" / "Qualifications". These drive knockout filters and primary ATS search queries.
-3. **Extract Nice-to-Haves.** Pull every skill under "Preferred" / "Bonus" / "Nice-to-have". These act as tie-breakers in ranking.
-4. **Build Action-Skill Pairs.** Scan the "Responsibilities" section for verb-skill pairs (e.g., "Deploy RAG pipelines" → `deploy + RAG`). These tell the resume builder what verb-context to wrap each keyword in.
-5. **Extract minimum years of experience.** Capture *every* explicit minimum-experience requirement as a separate line item, not a single lumped number: the overall career minimum *and* each skill- or domain-specific minimum (e.g., "5+ years Python", "3+ years Kubernetes", "2+ years leading teams"). For each, record the exact skill phrasing from the JD and the number. This matters because ATS compute skill-specific experience by summing the dated work-history roles where that keyword appears — a skill the resume lists only in a Skills section is credited with **zero** years. The downstream build skill needs each minimum itemized so it can place the keyword in enough dated roles to clear the math. Capture soft/preferred minimums ("ideally 5+ years", "bonus: 3+ years GraphQL") too, but tag them `preferred` so they aren't treated as knockouts.
-6. **Identify Likely Knockout Questions.** Flag anything that will likely appear as a yes/no form filter: visa sponsorship, location/remote, security clearance, specific YOE thresholds, degree requirements, on-call willingness.
-7. **Cross-reference industry signals.** Read `.claude/skills/resume-toolkit/reference/industry-signals.md`. List any implicit-but-expected keywords for this role type that are NOT in the JD but recruiters will search for anyway (e.g., a senior SWE role implicitly expects "system design" even if unstated).
-8. **Note red flags.** Anything in the JD that suggests poor fit, unrealistic scope, or potential filter mismatches with the user's background.
-9. **Write the report to a markdown file.** By default, save the full report to a `Signal Report - <Company> - <Job Title>.md` file alongside the job description (typically in the same `Job Applications/<Company>/<Job Title>/` directory the JD came from). Only skip the file and respond inline if the user explicitly asked for the report in chat or there is no obvious directory to write to.
+1. **Find the target title.** Locate the canonical job title in the JD header. If multiple variants appear (e.g., "Senior AI Engineer" in the header, "Staff ML Engineer" in the apply button), prefer the apply-button/URL version — that's what the recruiter searches on. Record it as `Target Title` for terminology mapping and ATS searchability in skills/bullets. **Do not treat it as the resume headline** — `build-targeted-resume` keeps a stable professional identity from the selected master instead of copying this string into `.role-line` or the summary opener.
+2. **Classify the role family.** Map the posting to a role family so `build-targeted-resume` can pick the best-fit master. If `Work Experience/resume-masters.md` exists, use its role-family / classification cues and name the closest manifest entry (or the closest purpose label). If the manifest is missing, infer a short family label from the JD (e.g., "AI / Platform", "Backend", "Full-stack", "Data / ML") and note that masters were unavailable. Record the result as `Role Family`.
+3. **Extract Required Skills.** Pull every hard skill, technology, framework, methodology, and certification listed under "Requirements" / "Must-Haves" / "Qualifications". These drive knockout filters and primary ATS search queries.
+4. **Extract Nice-to-Haves.** Pull every skill under "Preferred" / "Bonus" / "Nice-to-have". These act as tie-breakers in ranking.
+5. **Build Action-Skill Pairs.** Scan the "Responsibilities" section for verb-skill pairs (e.g., "Deploy RAG pipelines" → `deploy + RAG`). These tell the resume builder what verb-context to wrap each keyword in.
+6. **Extract minimum years of experience.** Capture *every* explicit minimum-experience requirement as a separate line item, not a single lumped number: the overall career minimum *and* each skill- or domain-specific minimum (e.g., "5+ years Python", "3+ years Kubernetes", "2+ years leading teams"). For each, record the exact skill phrasing from the JD and the number. This matters because ATS compute skill-specific experience by summing the dated work-history roles where that keyword appears — a skill the resume lists only in a Skills section is credited with **zero** years. The downstream build skill needs each minimum itemized so it can place the keyword in enough dated roles to clear the math. Capture soft/preferred minimums ("ideally 5+ years", "bonus: 3+ years GraphQL") too, but tag them `preferred` so they aren't treated as knockouts.
+7. **Identify Likely Knockout Questions.** Flag anything that will likely appear as a yes/no form filter: visa sponsorship, location/remote, security clearance, specific YOE thresholds, degree requirements, on-call willingness.
+8. **Cross-reference industry signals.** Read `.claude/skills/resume-toolkit/reference/industry-signals.md`. List any implicit-but-expected keywords for this role type that are NOT in the JD but recruiters will search for anyway (e.g., a senior SWE role implicitly expects "system design" even if unstated).
+9. **Note red flags.** Anything in the JD that suggests poor fit, unrealistic scope, or potential filter mismatches with the user's background.
+10. **Write the report to a markdown file.** By default, save the full report to a `Signal Report - <Company> - <Job Title>.md` file alongside the job description (typically in the same `Job Applications/<Company>/<Job Title>/` directory the JD came from). Only skip the file and respond inline if the user explicitly asked for the report in chat or there is no obvious directory to write to.
 
 ## Output destination
 
-The full structured report is a **file artifact, not a chat dump.** Write it to disk by default (see Process step 9), then keep your chat response short:
+The full structured report is a **file artifact, not a chat dump.** Write it to disk by default (see Process step 10), then keep your chat response short:
 
 - A 1–3 sentence high-level summary (role fit, what the resume must lead with).
 - Any important flags — knockout risks, mismatches, or anything the user must act on before applying.
@@ -48,8 +49,11 @@ The file must contain these sections, in this order:
 ```markdown
 # Signal Report: <Job Title> at <Company>
 
-## Title to Mirror
-<Exact string to use in the resume summary/header>
+## Target Title
+<Exact JD title string. For terminology mapping and ATS searchability in skills/bullets — not for the resume headline or summary identity.>
+
+## Role Family
+<Closest master name or purpose from Work Experience/resume-masters.md when available; otherwise a short inferred family label. Used by build-targeted-resume to select the baseline master.>
 
 ## Required Skills
 <Comma-separated list. Use exact JD phrasing. For acronyms, include both forms: "Retrieval-Augmented Generation (RAG)".>
