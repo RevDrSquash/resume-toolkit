@@ -38,7 +38,7 @@ Expected at the project root when the plugin is installed:
 | `Resume Masters/` | Generated master HTML files (`Master Resume - <Name>.html`), built from the blank template. |
 | `Job Applications/` | Per-posting JD, signal report, tailored resume HTML/PDF, and `index.html` tracker. |
 
-The blank template at `skills/build-targeted-resume/resume-template.html` remains the sole layout/CSS source. Masters are filled from the notes; tailored resumes start from the selected master and keep that master's stable professional identity (they do not paste the JD title into the headline).
+The blank template at `skills/build-targeted-resume/resume-template.html` remains the sole layout/CSS source. Masters are filled from the notes; tailored resumes start from the selected master and keep that master's stable professional identity (they do not paste the JD title into the headline). Exact JD matching is confined to the Skills section when grounded; bullets stay in the candidate's own voice — selection and ordering over semantic rewrites — so the resume stays ATS-aware without looking mechanically reconstructed from the posting.
 
 ## Install
 

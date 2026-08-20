@@ -8,6 +8,10 @@ Also runs HTML-only length checks: an over-long summary, and bullets past
 their ideal/maximum length (the wall-of-text guard). See the length
 threshold constants below.
 
+With `--jd`, also flags shared long phrases between the JD and the resume
+body (JD phrase echo) — a signal that the resume was mechanically
+reconstructed from the posting.
+
 Intended use: called by the `review-resume` skill before the model runs
 its checklist pass, so it can fold the deterministic findings into its
 prioritized critique.
@@ -15,6 +19,7 @@ prioritized critique.
 Usage:
     python .claude/skills/resume-toolkit/scripts/lint_resume.py "<path-to-resume.html or .md>"
     python .claude/skills/resume-toolkit/scripts/lint_resume.py "<path>" --format json
+    python .claude/skills/resume-toolkit/scripts/lint_resume.py "<path>" --jd "<jd.md>"
 
 Exit code is always 0 (informational). The output is the source of truth
 for the number of issues found.
@@ -25,9 +30,10 @@ import html as _html
 import json
 import re
 import sys
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Pattern
+from typing import Dict, List, Optional, Pattern, Set, Tuple
 
 
 # ---------------------------------------------------------------------------
@@ -404,6 +410,34 @@ _RULE_BULLET_OVER_IDEAL = Rule(
     ),
     fix="Tighten toward a single line: trim filler words and redundant context.",
 )
+_RULE_REPEATED_ACRONYM = Rule(
+    name="repeated-acronym-expansion",
+    severity="minor",
+    why=(
+        "Both the expanded form and the acronym should appear once for ATS "
+        "(usually in Skills). Re-expanding the same acronym across the resume "
+        "reads as mechanical and wastes space."
+    ),
+    fix=(
+        "Keep the dual-format on the first mention only; use the short form "
+        "(the acronym) everywhere else."
+    ),
+)
+_RULE_JD_PHRASE_ECHO = Rule(
+    name="jd-phrase-echo",
+    severity="material",
+    why=(
+        "A long phrase shared with the job description makes the resume look "
+        "mechanically reconstructed from the posting — an over-tuned / "
+        "AI-tailored signal. Exact JD terms belong in the Skills section when "
+        "grounded; bullets should match concepts with conventional terminology."
+    ),
+    fix=(
+        "Rewrite in the candidate's own voice using conventional industry "
+        "terminology. Keep exact JD terms in Skills only when they are true "
+        "and grounded in documented experience."
+    ),
+)
 
 
 # ---------------------------------------------------------------------------
@@ -579,6 +613,216 @@ def lint_lengths(raw: str, suffix: str) -> List[Finding]:
 
 
 # ---------------------------------------------------------------------------
+# Repeated acronym expansions
+# ---------------------------------------------------------------------------
+
+# Matches "Expanded Form (ACRO)" where ACRO is 2–8 uppercase letters and the
+# preceding words look like an expansion (capitalized tokens). Leading verbs
+# that happen to be capitalized (bullet starts) are trimmed via initials check.
+_ACRONYM_EXPANSION = re.compile(
+    r"\b((?:[A-Z][A-Za-z0-9]+(?:[\s/-]+|$)){1,8})\(([A-Z][A-Z0-9]{1,7})\)"
+)
+
+
+def _trim_expansion_to_acro(expansion: str, acro: str) -> str:
+    """Drop leading capitalized words until remaining initials match the acronym."""
+    # Split on whitespace and hyphens/slashes so "Retrieval-Augmented" → two initials.
+    parts = [p for p in re.split(r"[\s/-]+", expansion.strip()) if p]
+    acro_u = acro.upper()
+    for start in range(len(parts)):
+        suffix = parts[start:]
+        initials = "".join(p[0].upper() for p in suffix)
+        if initials == acro_u:
+            # Reconstruct a readable expansion from the original slice.
+            # Find the start of suffix[0] in the original expansion string.
+            first = suffix[0]
+            idx = expansion.find(first)
+            if idx >= 0:
+                return expansion[idx:].strip()
+            return " ".join(suffix)
+    return expansion.strip()
+
+
+def lint_repeated_acronyms(text: str) -> List[Finding]:
+    """Flag second and later dual-format expansions of the same acronym."""
+    by_acro: Dict[str, List[re.Match]] = defaultdict(list)
+    for m in _ACRONYM_EXPANSION.finditer(text):
+        by_acro[m.group(2)].append(m)
+
+    findings: List[Finding] = []
+    line_starts = [0]
+    for i, ch in enumerate(text):
+        if ch == "\n":
+            line_starts.append(i + 1)
+
+    def offset_to_line(offset: int) -> int:
+        lo, hi = 0, len(line_starts) - 1
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if line_starts[mid] <= offset:
+                lo = mid
+            else:
+                hi = mid - 1
+        return lo + 1
+
+    def line_at(line_number: int) -> str:
+        start = line_starts[line_number - 1]
+        end = (
+            line_starts[line_number] - 1
+            if line_number < len(line_starts)
+            else len(text)
+        )
+        return text[start:end]
+
+    for acro, matches in by_acro.items():
+        if len(matches) < 2:
+            continue
+        # First expansion is allowed; flag subsequent ones.
+        for m in matches[1:]:
+            line_number = offset_to_line(m.start())
+            excerpt = line_at(line_number).strip()
+            if len(excerpt) > 200:
+                excerpt = excerpt[:197] + "..."
+            trimmed = _trim_expansion_to_acro(m.group(1), acro)
+            matched = f"{trimmed} ({acro})".strip()
+            findings.append(
+                Finding(
+                    rule=_RULE_REPEATED_ACRONYM,
+                    line_number=line_number,
+                    matched_text=matched,
+                    line_excerpt=excerpt,
+                )
+            )
+    return findings
+
+
+# ---------------------------------------------------------------------------
+# JD phrase echo (optional --jd)
+# ---------------------------------------------------------------------------
+
+JD_PHRASE_MIN_WORDS = 6
+
+_SKILLS_SECTION_HTML = re.compile(
+    r"<h2[^>]*>\s*Skills\s*</h2>.*?(?=<h2\b|$)",
+    re.IGNORECASE | re.DOTALL,
+)
+_SKILLS_SECTION_MD = re.compile(
+    r"^#{1,3}\s*Skills\s*$.*?(?=^#{1,3}\s|\Z)",
+    re.IGNORECASE | re.MULTILINE | re.DOTALL,
+)
+
+
+def _normalize_words(text: str) -> List[str]:
+    """Lowercase, strip punctuation, collapse to word tokens."""
+    lowered = text.lower()
+    cleaned = re.sub(r"[^a-z0-9\s]+", " ", lowered)
+    return [w for w in cleaned.split() if w]
+
+
+def _body_text_excluding_skills(raw: str, suffix: str, full_text: str) -> str:
+    """Resume body text with the Skills section removed when detectable."""
+    if suffix in {".html", ".htm"}:
+        stripped = _SKILLS_SECTION_HTML.sub("\n", raw)
+        return html_to_text(stripped)
+    if suffix == ".md":
+        return _SKILLS_SECTION_MD.sub("\n", raw)
+    return full_text
+
+
+def lint_jd_phrase_echo(
+    resume_body: str, jd_text: str
+) -> List[Finding]:
+    """Flag word n-grams of length >= JD_PHRASE_MIN_WORDS shared with the JD."""
+    resume_words = _normalize_words(resume_body)
+    jd_words = _normalize_words(jd_text)
+    if len(resume_words) < JD_PHRASE_MIN_WORDS or len(jd_words) < JD_PHRASE_MIN_WORDS:
+        return []
+
+    max_n = min(12, len(jd_words), len(resume_words))
+    jd_ngrams: Set[Tuple[str, ...]] = set()
+    for n in range(JD_PHRASE_MIN_WORDS, max_n + 1):
+        for i in range(len(jd_words) - n + 1):
+            jd_ngrams.add(tuple(jd_words[i : i + n]))
+
+    # Prefer longest matches: scan resume for n-grams longest-first and skip
+    # overlapping shorter echoes that share word indices with an already-flagged span.
+    covered: Set[int] = set()
+    candidates: List[Tuple[int, int, Tuple[str, ...]]] = []  # start, end, gram
+
+    for n in range(max_n, JD_PHRASE_MIN_WORDS - 1, -1):
+        for i in range(len(resume_words) - n + 1):
+            if any(idx in covered for idx in range(i, i + n)):
+                continue
+            gram = tuple(resume_words[i : i + n])
+            if gram not in jd_ngrams:
+                continue
+            covered.update(range(i, i + n))
+            candidates.append((i, i + n, gram))
+
+    if not candidates:
+        return []
+
+    line_starts = [0]
+    for i, ch in enumerate(resume_body):
+        if ch == "\n":
+            line_starts.append(i + 1)
+
+    def offset_to_line(offset: int) -> int:
+        lo, hi = 0, len(line_starts) - 1
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if line_starts[mid] <= offset:
+                lo = mid
+            else:
+                hi = mid - 1
+        return lo + 1
+
+    def line_at(line_number: int) -> str:
+        start = line_starts[line_number - 1]
+        end = (
+            line_starts[line_number] - 1
+            if line_number < len(line_starts)
+            else len(resume_body)
+        )
+        return resume_body[start:end]
+
+    # Locate each candidate in document order via successive regex searches so
+    # repeated echoes (summary + bullet) get distinct line numbers.
+    findings: List[Finding] = []
+    search_from = 0
+    # Sort by word-index start so we advance through the body left-to-right.
+    for _start, _end, gram in sorted(candidates, key=lambda c: c[0]):
+        phrase = " ".join(gram)
+        pat = re.compile(
+            r"\b" + r"\W+".join(re.escape(w) for w in gram) + r"\b",
+            re.IGNORECASE,
+        )
+        m = pat.search(resume_body, search_from)
+        if not m:
+            # Fallback: search from the start (tokenization drift).
+            m = pat.search(resume_body)
+        if m:
+            line_number = offset_to_line(m.start())
+            excerpt = line_at(line_number).strip()
+            search_from = m.end()
+        else:
+            line_number = 1
+            excerpt = phrase
+        if len(excerpt) > 200:
+            excerpt = excerpt[:197] + "..."
+        findings.append(
+            Finding(
+                rule=_RULE_JD_PHRASE_ECHO,
+                line_number=line_number,
+                matched_text=phrase,
+                line_excerpt=excerpt,
+            )
+        )
+
+    return findings
+
+
+# ---------------------------------------------------------------------------
 # Reporting
 # ---------------------------------------------------------------------------
 
@@ -674,6 +918,15 @@ def main(argv: List[str]) -> int:
         default="text",
         help="Output format (default: text).",
     )
+    parser.add_argument(
+        "--jd",
+        metavar="PATH",
+        help=(
+            "Optional path to the job description. When set, flags long "
+            "phrases shared between the JD and the resume body "
+            "(jd-phrase-echo)."
+        ),
+    )
     args = parser.parse_args(argv)
 
     path = Path(args.path)
@@ -684,7 +937,20 @@ def main(argv: List[str]) -> int:
     raw = path.read_text(encoding="utf-8")
     suffix = path.suffix.lower()
     text = html_to_text(raw) if suffix in {".html", ".htm"} else raw
-    findings = lint(text) + lint_lengths(raw, suffix)
+    findings = (
+        lint(text)
+        + lint_lengths(raw, suffix)
+        + lint_repeated_acronyms(text)
+    )
+
+    if args.jd:
+        jd_path = Path(args.jd)
+        if not jd_path.exists():
+            print(f"ERROR: JD file not found: {jd_path}", file=sys.stderr)
+            return 2
+        jd_raw = jd_path.read_text(encoding="utf-8")
+        body = _body_text_excluding_skills(raw, suffix, text)
+        findings.extend(lint_jd_phrase_echo(body, jd_raw))
 
     if args.format == "json":
         print(format_json_report(findings, path))

@@ -70,9 +70,13 @@ Coverage gaps the user *doesn't* have go in `Gaps to Address`, not the fix list 
 
 ### Step 2 — Content and bullet quality (human judgment)
 
-With coverage settled, check that what's included is well-represented. **Skip anything the linter catches** (AI-sounding patterns, fluff words, outdated tech, em-dashes, semicolons — those are Step 4). Focus here on what regex can't judge:
+With coverage settled, check that what's included is well-represented. **Skip anything the linter catches** (AI-sounding patterns, fluff words, outdated tech, em-dashes, semicolons, repeated acronym expansions, JD phrase echoes when `--jd` is passed — those are Step 4). Focus here on what regex can't judge:
 
 - [ ] **Invented or unsupported claims.** Any metric, skill, scope, or outcome not backed by the user's input? → Critical. This is the most important manual check; the linter cannot do it.
+- [ ] **Ungrounded exact-match skill.** Any Skills-section term that appears only because the JD asked for it, with no support in `Work Experience/` notes (or the master)? Adjacency is not grounding — related experience does not license inventing the JD's exact term. → Critical per ungrounded term.
+- [ ] **JD phrase echo.** Do bullets or the summary copy multiple distinctive multi-word phrases or sentence structures from the JD (or from the signal report's `Distinctive JD Phrases` denylist)? Exact terms belong in Skills when grounded; bullets should match concepts with conventional terminology. → Material; escalate to Critical if pervasive enough that the resume looks mechanically reconstructed from the posting.
+- [ ] **Missing terminology bridge.** Does the resume use an internal/canonical term for a JD-required concept without connecting it to the accurate industry/JD equivalent? Reviewers should not have to infer the mapping. → Material per missing bridge.
+- [ ] **Over-rewriting drift.** Were canonical master bullets semantically rewritten where selecting or reordering existing bullets would have covered the requirement? Tailoring should prefer selection/ordering over rewriting accomplishments. → Material when drift is unnecessary.
 - [ ] **Weak or awkward bullets.** Bullets missing the `verb + skill/context + quantified outcome` shape, vague ("Worked on the inference pipeline"), or clumsily phrased. → Material per weak bullet.
 - [ ] **Overly broad terms where specifics are expected** ("Machine Learning" instead of "RAG"/"LoRA fine-tuning", "Cloud" instead of "AWS Bedrock"/"EKS"). → Material.
 - [ ] **Consulting formatted per `.claude/skills/resume-toolkit/reference/application-protocol.md`.** → Material if consulting is present and mishandled.
@@ -92,13 +96,19 @@ Surface the highest-impact tightenings as before/after edits.
 
 Content has settled, so run the deterministic checks once.
 
-If the resume is a file on disk (`.html` or `.md`), run the bundled linter:
+If the resume is a file on disk (`.html` or `.md`), run the bundled linter. When reviewing against a JD file, pass it so the linter can flag shared long phrases:
+
+```
+python .claude/skills/resume-toolkit/scripts/lint_resume.py "<path-to-resume>" --jd "<path-to-jd.md>"
+```
+
+Without a JD file (generic review, paste-only JD, etc.), omit `--jd`:
 
 ```
 python .claude/skills/resume-toolkit/scripts/lint_resume.py "<path-to-resume>"
 ```
 
-It encodes the patterns from the "AI-sounding patterns to avoid" and "Words to avoid" sections of `.claude/skills/resume-toolkit/reference/formatting-guide.md` (em-dashes, "leveraged"/"utilized", grandiose adjectives, fast-paced-landscape framings, antithesis cadence, tricolons, symmetrical adjective stacks, puffery on known entities, fluff words, excessive colons, semicolons, outdated tech) plus length checks (over-long summary, over-long bullets). Each finding has a rule name, severity, line number, the matched substring, why it's flagged, and a concrete fix. Fold them in by severity:
+It encodes the patterns from the "AI-sounding patterns to avoid" and "Words to avoid" sections of `.claude/skills/resume-toolkit/reference/formatting-guide.md` (em-dashes, "leveraged"/"utilized", grandiose adjectives, fast-paced-landscape framings, antithesis cadence, tricolons, symmetrical adjective stacks, puffery on known entities, fluff words, excessive colons, semicolons, outdated tech, repeated acronym expansions, and — with `--jd` — JD phrase echoes) plus length checks (over-long summary, over-long bullets). Each finding has a rule name, severity, line number, the matched substring, why it's flagged, and a concrete fix. Fold them in by severity:
 
 - Every linter `critical` → Critical Issues; every `material` → Material Issues; every `minor` → Minor Issues.
 - Dismiss only obvious false positives (e.g., the word "robust" survived HTML-stripping from a CSS class name), and note any you dismiss so the user knows you read them.
@@ -116,7 +126,7 @@ Then walk the formatting checklist (`formatting-guide.md`):
 - [ ] Standard fonts (Arial, Calibri, Times New Roman) → Material (only if known)
 - [ ] Section order: Header → Summary → Skills → Experience → Education → Certs → Material if reordered
 - [ ] Length: two pages for senior; one page for <3 years → Material
-- [ ] Acronyms dual-formatted on first mention → Minor
+- [ ] Acronyms dual-formatted once somewhere (expanded + acronym, usually in Skills); no repeated expansions of the same acronym → Minor
 
 ## Output format
 
