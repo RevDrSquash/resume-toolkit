@@ -1,7 +1,7 @@
 {
   "name": "resume-toolkit",
-  "version": "0.3.0",
-  "description": "End-to-end resume tailoring and job-application toolkit: extract JD signals, build ATS-optimized resumes, review against a JD, publish to ATS-parseable PDF, and track applications.",
+  "version": "0.4.0",
+  "description": "End-to-end resume tailoring and job-application toolkit: maintain master resumes, extract JD signals, tailor from the best-fit master, review against a JD, publish to ATS-parseable PDF, and track applications.",
   "author": {
     "name": "RevDrSquash"
   }

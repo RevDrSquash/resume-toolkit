@@ -1,6 +1,6 @@
 # Application Protocol
 
-How to actually submit applications — channel choice, knockout questions, experience-notes hygiene, and consulting representation. Used by `build-targeted-resume` (for consulting formatting), `job-application` (for channel choice and knockout questions when assembling an application), and as a standalone reference when deciding how to apply.
+How to actually submit applications — channel choice, knockout questions, experience-notes hygiene, resume masters, and consulting representation. Used by `generate-master-resumes` and `build-targeted-resume` (for masters, consulting formatting, and concurrent roles), `job-application` (for channel choice and knockout questions when assembling an application), and as a standalone reference when deciding how to apply.
 
 ## Channel choice
 
@@ -46,24 +46,29 @@ ATS systems will verify YOE form answers against parsed date ranges from your re
 
 ## Canonical sources & precedence
 
-Every targeted resume is assembled from **canonical sources**, never from a previous resume. There are exactly two, plus one for personal facts:
+Every targeted resume is assembled from **canonical sources**, never from a previous *tailored* resume. The layers:
 
-- **Formatting & layout** comes from `.claude/skills/resume-toolkit/skills/build-targeted-resume/resume-template.html` (the fill-in skeleton — section order, CSS, accent colors, date format) and the rules in `.claude/skills/resume-toolkit/reference/formatting-guide.md`. Copy the template fresh for each application.
-- **Experience content** comes from the **`Work Experience/` notes** — `work history.md` (dates/titles), `experience - <Company> - <Position>.md` (scope, accomplishments, draft bullets), `skills - technical.md` / `skills - soft.md` (skill catalogue + role attribution), and `projects.md`. See "Experience notes hygiene" below.
-- **Personal facts** (name, location, phone, email, LinkedIn, education) come from `Work Experience/personal-details.md`.
+1. **Formatting & layout** comes from `.claude/skills/resume-toolkit/skills/build-targeted-resume/resume-template.html` (the fill-in skeleton — section order, CSS, accent colors, date format) and the rules in `.claude/skills/resume-toolkit/reference/formatting-guide.md`. The blank template is the sole layout source; masters are built by copying it.
+2. **Experience content** (ground truth) comes from the **`Work Experience/` notes** — `work history.md` (dates/titles), `experience - <Company> - <Position>.md` (scope, accomplishments, draft bullets), `skills - technical.md` / `skills - soft.md` (skill catalogue + role attribution), and `projects.md`. See "Experience notes hygiene" below.
+3. **Personal facts** (name, location, phone, email, LinkedIn, education) come from `Work Experience/personal-details.md`.
+4. **Maintained masters** under `Resume Masters/` (declared in `Work Experience/resume-masters.md`) are the **derived baseline** that each tailored resume starts from. They are not a second source of experience facts — they are a maintained rendering of (1)+(2)+(3) shaped for a role family. See "Resume masters" below.
 
-**Precedence / fallback rule.** Previous resumes and cover letters — anything under `Job Applications/<Company>/<Role>/` — are **not canonical**. They are point-in-time snapshots and are presumed **stale**. Do not pattern-match a new resume off a prior artifact for either layout or content. Consult a prior artifact only as a **last resort**, when a canonical source genuinely lacks something you need; when you do, verify it against the canonical sources, and prefer **back-filling the canonical source** (the template or the `Work Experience/` notes) over copying the artifact forward.
+**Precedence / fallback rule.** Previous *tailored* resumes and cover letters — anything under `Job Applications/<Company>/<Role>/` — are **not canonical**. They are point-in-time snapshots and are presumed **stale**. Do not pattern-match a new resume off a prior tailored artifact for either layout or content. The selected master **is** the sanctioned starting point for a new application. Consult a prior tailored artifact only as a **last resort**, when a canonical source genuinely lacks something you need; when you do, verify it against the notes / personal-details / template, and prefer **back-filling the canonical source** (the notes or the template, then regenerating masters) over copying the tailored artifact forward.
 
-**Why this matters.** Canonical sources are edited **once** and propagate to every future resume — change the template layout, revise a bullet, or add a new role in `Work Experience/`, and the next resume reflects it automatically. A prior artifact does the opposite: anchoring on it silently inherits its drift (retired accent colors and phrasing, outdated section ordering, stale bullets, and roles that have since been added or changed), reproducing an old state instead of the intended current one.
+**Why this matters.** Canonical notes and the template are edited **once** and propagate by regenerating masters — then every future tailored resume starts from the refreshed baseline. A prior tailored artifact does the opposite: anchoring on it silently inherits its drift (retired accent colors and phrasing, outdated section ordering, stale bullets, roles that have since been added or changed, and historically JD titles copied into the identity), reproducing an old state instead of the intended current one.
+
+**How edits propagate.** Fix the `Work Experience/` note or the blank template, then run `generate-master-resumes`. Do not treat a master HTML file as an ad-hoc editable source of truth for experience content, and do not permanently fork experience only inside one job folder.
 
 ## Experience notes hygiene
 
-The source of truth for experience content is the **`Work Experience/` notes** (per "Canonical sources & precedence" above), not a single master-resume document and not a prior tailored resume. That directory is the evidence database every targeted resume draws from:
+The source of truth for experience *facts* is the **`Work Experience/` notes** (per "Canonical sources & precedence" above), not a prior tailored resume. Maintained masters under `Resume Masters/` are derived from these notes; they are the starting point for tailoring, not a replacement for the evidence database. That directory holds:
 
 - **`work history.md`** — the authoritative record of employers, titles, locations, and dates. Resume date ranges come from here.
 - **`experience - <Company> - <Position>.md`** — one file per role: scope, responsibilities, accomplishments, and draft bullets.
 - **`skills - technical.md` / `skills - soft.md`** — the skill catalogue (see the skill-to-role mapping note below).
 - **`projects.md`** — side projects and open-source work not tied to an employer.
+- **`personal-details.md`** — contact info and education.
+- **`resume-masters.md`** — the user-owned manifest declaring each master (see "Resume masters" below).
 
 Keep these healthy:
 
@@ -81,23 +86,92 @@ When a skill's role attribution or rough duration is missing from the notes, fil
 
 ### The 80/20 targeting rule
 
-Each targeted resume is ~80% stable core and ~20% swappable per application:
+Each targeted resume is ~80% stable core and ~20% swappable per application. **The 80% baseline is literally the selected master resume** (see "Resume masters").
 
-- **80% baseline (stable across applications):** Header, education, certifications, foundational skills you always list, your 2-3 most recent roles' core bullets, your professional summary's general identity.
-- **20% swappable per JD:** The mirrored job title, top-of-skills-section ordering, top bullet of the most recent role, 5-10 specific keywords swapped in based on the signal report.
+- **80% baseline (the master):** Header, education, certifications, foundational skills, recent roles' core bullets, employment chronology, grounded claims, and the **stable professional identity** for that role family.
+- **20% swappable per JD:** Summary emphasis after the identity opener, top-of-skills-section ordering, top bullet of the most recent role, JD terminology adopted in skills/bullets where it accurately maps to real experience, 5-10 specific keywords swapped in based on the signal report.
 
 Swap zones, ordered by leverage:
 
-1. The professional summary's opening sentence (mirror the title; include 3-5 target keywords)
-2. The Skills section's ordering and dual-format acronym variants
-3. The top bullet of the most recent role
+1. The professional summary's emphasis sentences (keep the stable identity opener; do **not** paste the JD's target title into the identity)
+2. The Skills section's ordering and dual-format acronym variants using exact JD phrasing
+3. The top bullet of the most recent role; select/reorder bullets to surface the most relevant evidence
 4. Implicit-industry-expectation keywords woven into existing bullets
 
 Don't touch:
-- Job titles (unless the title was genuinely different — never inflate)
+
+- The stable identity headline (it comes from the master / manifest, not the JD)
+- Job titles on past roles (unless the title was genuinely different — never inflate)
 - Employer names, dates, location
 - Education
 - Bullets from older roles — **with one exception:** when a JD sets a hard per-skill minimum-years requirement (e.g., "5+ years C++"), back-port that genuinely-used keyword into older roles so the dated work history sums to the minimum. ATS credit skill-specific experience only from dated roles where the keyword appears, so a skill confined to recent roles or the Skills section is under-counted. Only ever back-port a skill the user actually used in that role; never invent usage to pad tenure. See the skill-duration math in `build-targeted-resume`.
+
+## Resume masters
+
+Maintained master resumes are the stable baselines that `build-targeted-resume` copies and tunes. The blank template remains the sole layout/CSS source; masters are filled HTML derived from the template + `Work Experience/` notes. The **number of masters and what each is for is user configuration** — every user's split is different — and lives in the user-owned manifest.
+
+### Manifest: `Work Experience/resume-masters.md`
+
+One entry per master. Suggested structure:
+
+```markdown
+# Resume Masters
+
+How this candidate's maintained resumes are split. Used by `generate-master-resumes`
+(to build/update) and by `build-targeted-resume` / `extract-job-signals` (to classify
+a JD and pick the best-fit baseline).
+
+## <Name>
+
+- **Purpose:** <What role family this master targets>
+- **Identity headline:** `<Exact string for .role-line and summary opener>`
+- **Role-family cues:** <Keywords, stacks, and signals that mean "use this master">
+- **File:** `Resume Masters/Master Resume - <Name>.html`
+```
+
+Illustrative example (not a hardcoded default — adapt per user):
+
+```markdown
+# Resume Masters
+
+## AI / Platform
+
+- **Purpose:** AI platform, ML infrastructure, and AI-adjacent distributed systems roles
+- **Identity headline:** `Senior Software Engineer | AI Platforms & Distributed Systems`
+- **Role-family cues:** AI platform, ML infra, LLM, RAG, inference, AI engineering, agentic systems
+- **File:** `Resume Masters/Master Resume - AI Platform.html`
+
+## Backend
+
+- **Purpose:** Backend and distributed systems roles without a primary AI mandate
+- **Identity headline:** `Senior Software Engineer | Backend & Distributed Systems`
+- **Role-family cues:** backend, distributed systems, microservices, API platform, data pipeline (non-ML-primary)
+- **File:** `Resume Masters/Master Resume - Backend.html`
+```
+
+Prefer a small set (1–3). A third "general" master is usually unnecessary if a personal site can serve as the broader CV; add one only when a concrete use case appears.
+
+### Generated files: `Resume Masters/`
+
+```
+Resume Masters/
+  Master Resume - <Name>.html
+```
+
+Created and updated by `generate-master-resumes`. Tailoring copies the selected file into `Job Applications/<Company>/<Role>/Resume - <Company> - <Role>.html` and edits the copy.
+
+### Regeneration triggers
+
+Regenerate masters (via `generate-master-resumes`) when:
+
+- A role, skill, metric, or project is added/changed in `Work Experience/`
+- The identity headline or purpose in the manifest changes
+- The blank template or `formatting-guide.md` changes in a way that should apply to all resumes
+- `job-application` freshness check finds notes newer than the master HTML
+
+### Stable identity
+
+Each master's identity headline is the candidate's professional identity for that role family. Tailored resumes **keep that headline** and adopt JD terminology only in skills/bullets where it accurately maps to real experience. Do not copy the JD's target title into `.role-line` or the summary opener — exact title mirroring reads as mechanical and reduces perceived authenticity, even when it helps ATS searchability elsewhere.
 
 ## Consulting and contract work
 
@@ -131,6 +205,27 @@ MM/YYYY – MM/YYYY
 ```
 
 The "Contract" / "Consultant" label is important — without it, the role reads as a short tenure and may trigger job-hopping concerns.
+
+### Concurrent roles
+
+When a consulting (or other secondary) engagement **overlaps in dates** with a full-time role, make the concurrency unambiguous on the resume. ATS risk from overlapping dates is usually low; human reviewers may pause to reconcile whether both were full-time.
+
+Preferred presentation:
+
+- Label the secondary engagement as part-time consulting, e.g. `Consultant — Part-time | <Client>` or include "Part-time" in the role line.
+- Add a one-line clarifier that it ran alongside the full-time role (this can be the role-context line or the first short bullet). One line is enough — do not spend a full accomplishment bullet on the clarification.
+- Do **not** put employer consent, permission, or background-check narrative on the resume. Those details belong in conversation if asked.
+
+Example shape:
+
+```
+Consultant — Part-time | <Client> | <Location or Remote>
+Mon YYYY – Mon YYYY
+Part-time consulting alongside full-time role at <Full-Time Employer>.
+- <Verb + tech + outcome>
+```
+
+Apply this whenever dates overlap, including on master resumes — concurrent clarity is part of the stable baseline, not a per-JD tweak.
 
 ### Common pitfalls
 

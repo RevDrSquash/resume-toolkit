@@ -1,6 +1,6 @@
 ---
 name: job-application
-description: Orchestrate the end-to-end resume tailoring workflow for a specific job. Parses the JD, drafts a tailored resume, audits it, iterates with the user, and publishes the final PDF. Trigger when the user wants to apply for a specific posting, tailor a resume for a job, or run the full resume flow end-to-end. Composes fetch-job-description, extract-job-signals, build-targeted-resume, review-resume, publish-resume, and update-application-tracker.
+description: Orchestrate the end-to-end resume tailoring workflow for a specific job. Parses the JD, ensures master resumes are current, drafts a tailored resume from the best-fit master, audits it, iterates with the user, and publishes the final PDF. Trigger when the user wants to apply for a specific posting, tailor a resume for a job, or run the full resume flow end-to-end. Composes fetch-job-description, extract-job-signals, generate-master-resumes, build-targeted-resume, review-resume, publish-resume, and update-application-tracker.
 ---
 
 # Job Application
@@ -27,6 +27,7 @@ Also required:
 
 - Path to the user's experience notes (`Work Experience/`)
 - Stable personal facts (`Work Experience/personal-details.md` — contact info and education). The downstream resume build reads this for the header and Education section, so these never need to be pulled from an old resume (see "Canonical sources" below).
+- Master manifest and masters (`Work Experience/resume-masters.md` and `Resume Masters/Master Resume - <Name>.html`). If missing or stale, this skill invokes `generate-master-resumes` before building (see step 1.5).
 - Company name and role title (required or inferable) for the output folder name
 
 ## Workflow
@@ -50,8 +51,16 @@ Create the `Job Applications/<Company>/<Role>/` directory if needed.
 ### 1. Extract signals
 Invoke `extract-job-signals` on the JD markdown from step 0. Save the resulting signal report into the job-application folder as `Signal Report - <Company> - <Role>.md`. The JD file must already be in the folder from step 0 — do not re-fetch here. Then bump tracker status to `drafting`.
 
+### 1.5. Ensure masters exist and are current
+Before building, verify the master baseline:
+
+1. Confirm `Work Experience/resume-masters.md` exists and every entry has a matching `Resume Masters/Master Resume - <Name>.html`.
+2. Freshness check: if any file under `Work Experience/` (notes, skills, personal-details, or the manifest itself) is newer than the selected/available master HTML files, treat the masters as **stale**.
+3. If masters or the manifest are **missing** or **stale**, tell the user and invoke `generate-master-resumes` (with confirmation when regenerating stale masters that the user may have been using). Do not silently skip this gate.
+4. If the user explicitly declines to create/update masters, proceed only with their acknowledgment that `build-targeted-resume` will fall back to the blank template — and note that credibility/consistency benefits of the master flow will be missing.
+
 ### 2. Build the tailored resume
-Invoke `build-targeted-resume`, passing the JD, the signal report, the user's experience notes (`Work Experience/`), and the stable personal facts (`Work Experience/personal-details.md`, for contact info and education). The utility produces a styled HTML file at `Resume - <Company> - <Role>.html` in the same folder.
+Invoke `build-targeted-resume`, passing the JD, the signal report, the master manifest (`Work Experience/resume-masters.md`), the `Resume Masters/` HTML files, the user's experience notes (`Work Experience/`), and the stable personal facts (`Work Experience/personal-details.md`). The utility selects the best-fit master, copies it into the job folder, and tunes it — producing `Resume - <Company> - <Role>.html`.
 
 ### 3. Audit the draft
 Invoke `review-resume` on the generated HTML against the **full JD** (`JD - <Company> - <Role>.md` from step 0) — not the signal report. The signal report was the input that built the resume, so auditing against it would only re-check the same reduced spec; the review must hit ground truth to catch anything the signal extraction dropped. (If the JD markdown somehow isn't available, fall back per `review-resume`'s own target order.) Surface the prioritized critique (Critical / Material / Minor) to the user. Do not silently apply the suggested fixes — that's the iteration step's job.
@@ -60,7 +69,7 @@ Invoke `review-resume` on the generated HTML against the **full JD** (`JD - <Com
 This is the human-review gate.
 
 - Present the review findings and ask which fixes to apply
-- For each batch of accepted changes, re-invoke `build-targeted-resume` (full HTML output, not a diff) with the additional instructions
+- For each batch of accepted changes, re-invoke `build-targeted-resume` (full HTML output, not a diff) with the additional instructions — still starting from the selected master baseline plus the accepted edits, not from a blank template
 - Optionally re-run `review-resume` after a substantive edit pass
 - Continue until the user explicitly signs off on the current draft
 
@@ -85,6 +94,14 @@ Job Applications/
       Resume - <Company> - <Role>.pdf
 ```
 
+Masters (shared across applications, not per posting):
+
+```
+Work Experience/resume-masters.md
+Resume Masters/
+  Master Resume - <Name>.html
+```
+
 If the user wants the review audit persisted, add `Review - <Company> - <Role>.md` alongside the others.
 
 ## Tracker maintenance
@@ -103,20 +120,22 @@ Tracker edits never advance status on assumption — only on user confirmation. 
 
 ## Rules and constraints
 
-- **Build from canonical sources, never from a previous resume.** Formatting/layout comes from `.claude/skills/resume-toolkit/skills/build-targeted-resume/resume-template.html` (+ `.claude/skills/resume-toolkit/reference/formatting-guide.md`); experience content comes from the `Work Experience/` notes; personal facts come from `Work Experience/personal-details.md`. Previous resumes and artifacts under `Job Applications/<Company>/<Role>/` are **presumed stale** — consult them only as a last resort when a canonical source is genuinely missing something, verify against canonical, and prefer back-filling the canonical source over copying the artifact forward. This is what lets the user change layout or experience **once** and have every future resume reflect it. Full rule: "Canonical sources & precedence" in `.claude/skills/resume-toolkit/reference/application-protocol.md`.
-- **Don't duplicate utility logic.** Each utility owns its piece — JD fetch, signal extraction, drafting, auditing, rendering, tracking. This skill calls them; it does not reinvent them.
+- **Tailor from masters, not from a previous tailored resume.** Formatting/layout originates in the blank template and is carried by the masters; experience content comes from the `Work Experience/` notes; personal facts come from `Work Experience/personal-details.md`; the per-posting draft starts from the selected master. Previous tailored resumes under `Job Applications/<Company>/<Role>/` are **presumed stale** — consult them only as a last resort when a canonical source is genuinely missing something, verify against canonical, and prefer back-filling the notes (then regenerating masters) over copying a tailored artifact forward. Full rule: "Canonical sources & precedence" in `.claude/skills/resume-toolkit/reference/application-protocol.md`.
+- **Don't skip the masters gate.** Missing or stale masters go through `generate-master-resumes` (with user confirmation) before step 2.
+- **Don't duplicate utility logic.** Each utility owns its piece — JD fetch, signal extraction, master generation, drafting, auditing, rendering, tracking. This skill calls them; it does not reinvent them.
 - **`fetch-job-description` for JD URLs.** Prefer it over WebFetch, which paraphrases. LinkedIn uses `linkedin-job-to-markdown`. Manual paste/file still works.
 - **The iteration gate is non-negotiable.** Never auto-publish. The user must approve the current draft before step 5.
-- **All artifacts go in the job folder.** Single `Job Applications/<Company>/<Role>/` location for the full record of the application.
+- **All application artifacts go in the job folder.** Single `Job Applications/<Company>/<Role>/` location for the full record of the application. Masters stay under `Resume Masters/`.
 - **The tracker is canonical.** Every status change goes through `update-application-tracker`. Don't edit `index.html` by hand from this skill.
-- **Single-step invocations bypass this skill.** A user asking for signals alone, a review alone, or a tracker update alone should hit the utility directly.
+- **Single-step invocations bypass this skill.** A user asking for signals alone, a review alone, master regeneration alone, or a tracker update alone should hit the utility directly.
 
 ## Self-check before declaring done
 
 - [ ] JD markdown and signal report both saved to the job folder
-- [ ] Tailored HTML saved to the job folder
+- [ ] Masters + manifest existed (or were generated/updated with user confirmation) before the build
+- [ ] Tailored HTML saved to the job folder (started from the selected master)
 - [ ] Review ran against the full JD (not the signal report) and was surfaced to the user
 - [ ] User confirmed sign-off before publishing
 - [ ] PDF rendered and Notepad test result reported
-- [ ] All artifacts under `Job Applications/<Company>/<Role>/`
+- [ ] All application artifacts under `Job Applications/<Company>/<Role>/`
 - [ ] Tracker row exists in `Job Applications/index.html` and reflects the current status (`ready-to-submit` after publish; `submitted` once the user confirms they've sent it)

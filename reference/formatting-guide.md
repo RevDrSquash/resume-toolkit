@@ -6,7 +6,7 @@ Normative rules for producing an ATS-parseable, recruiter-friendly resume. Used 
 
 1. **Parseability.** If an ATS can't extract the right text into the right fields, nothing else matters. Single-column, standard headers, MM/YYYY dates, plain text contact info.
 2. **Coverage.** Every required skill from the target JD must appear at least once, in context.
-3. **Recruiter skimmability.** Most reviewers spend under 15 seconds on page one. Top of page one must contain the title mirror, the most recent role's first bullet, and the strongest 5 skills.
+3. **Recruiter skimmability.** Most reviewers spend under 15 seconds on page one. Top of page one must contain the stable professional identity headline, the most recent role's first bullet, and the strongest 5 skills.
 4. **Density without fluff.** A senior resume's signal-to-noise ratio matters more than its length. Quantified bullets, no buzzwords, no padding.
 
 ## File format
@@ -36,7 +36,7 @@ Normative rules for producing an ATS-parseable, recruiter-friendly resume. Used 
    - GitHub URL (plain text) if relevant to the role
 
 2. **Professional Summary** (3-4 sentences)
-   - Sentence 1: Mirror the exact target job title + years of experience + core identity. Example: "Senior AI Engineer with 12 years of experience building distributed systems and production ML infrastructure."
+   - Sentence 1: Stable professional identity (from the selected master / `resume-masters.md`) + years of experience + core focus. Example: "Senior Software Engineer | AI Platforms & Distributed Systems with 12 years of experience building distributed systems and production ML infrastructure." Do **not** paste the JD's exact target title into this identity — keep the master headline and adopt JD terminology in skills/bullets where truthful.
    - Sentence 2-3: Specific high-signal capabilities tied to the role.
    - Sentence 4 (optional): Notable scope/scale or industry context.
    - No fluff. No "results-driven, passionate professional". No objective statement ("Seeking a role where...") — it's outdated and centers what you want, not what you bring.

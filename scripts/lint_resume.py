@@ -379,7 +379,7 @@ _RULE_SUMMARY_LONG = Rule(
         "sentences / 50-80 words."
     ),
     fix=(
-        "Cut to 3-4 sentences. Keep the mirrored title, 3-5 keywords, and 1-2 "
+        "Cut to 3-4 sentences. Keep the identity headline, 3-5 keywords, and 1-2 "
         "standout metrics; move everything else into the bullets."
     ),
 )
