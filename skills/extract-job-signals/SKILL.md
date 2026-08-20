@@ -26,15 +26,16 @@ Turn a raw job description into a concise, structured report of what an applican
 3. **Extract Required Skills.** Pull every hard skill, technology, framework, methodology, and certification listed under "Requirements" / "Must-Haves" / "Qualifications". These drive knockout filters and primary ATS search queries.
 4. **Extract Nice-to-Haves.** Pull every skill under "Preferred" / "Bonus" / "Nice-to-have". These act as tie-breakers in ranking.
 5. **Build Action-Skill Pairs.** Scan the "Responsibilities" section for verb-skill pairs (e.g., "Deploy RAG pipelines" → `deploy + RAG`). These tell the resume builder what verb-context to wrap each keyword in.
-6. **Extract minimum years of experience.** Capture *every* explicit minimum-experience requirement as a separate line item, not a single lumped number: the overall career minimum *and* each skill- or domain-specific minimum (e.g., "5+ years Python", "3+ years Kubernetes", "2+ years leading teams"). For each, record the exact skill phrasing from the JD and the number. This matters because ATS compute skill-specific experience by summing the dated work-history roles where that keyword appears — a skill the resume lists only in a Skills section is credited with **zero** years. The downstream build skill needs each minimum itemized so it can place the keyword in enough dated roles to clear the math. Capture soft/preferred minimums ("ideally 5+ years", "bonus: 3+ years GraphQL") too, but tag them `preferred` so they aren't treated as knockouts.
-7. **Identify Likely Knockout Questions.** Flag anything that will likely appear as a yes/no form filter: visa sponsorship, location/remote, security clearance, specific YOE thresholds, degree requirements, on-call willingness.
-8. **Cross-reference industry signals.** Read `.claude/skills/resume-toolkit/reference/industry-signals.md`. List any implicit-but-expected keywords for this role type that are NOT in the JD but recruiters will search for anyway (e.g., a senior SWE role implicitly expects "system design" even if unstated).
-9. **Note red flags.** Anything in the JD that suggests poor fit, unrealistic scope, or potential filter mismatches with the user's background.
-10. **Write the report to a markdown file.** By default, save the full report to a `Signal Report - <Company> - <Job Title>.md` file alongside the job description (typically in the same `Job Applications/<Company>/<Job Title>/` directory the JD came from). Only skip the file and respond inline if the user explicitly asked for the report in chat or there is no obvious directory to write to.
+6. **Capture Distinctive JD Phrases.** Pull multi-word phrasings and sentence structures unique to this posting (marketing-y role blurbs, idiosyncratic stacks of requirements, house jargon) into `Distinctive JD Phrases (do not echo)`. The builder uses this as a denylist for bullets/summary so the resume does not look reconstructed from the JD.
+7. **Extract minimum years of experience.** Capture *every* explicit minimum-experience requirement as a separate line item, not a single lumped number: the overall career minimum *and* each skill- or domain-specific minimum (e.g., "5+ years Python", "3+ years Kubernetes", "2+ years leading teams"). For each, record the exact skill phrasing from the JD and the number. This matters because ATS compute skill-specific experience by summing the dated work-history roles where that keyword appears — a skill the resume lists only in a Skills section is credited with **zero** years. The downstream build skill needs each minimum itemized so it can place the keyword in enough dated roles to clear the math. Capture soft/preferred minimums ("ideally 5+ years", "bonus: 3+ years GraphQL") too, but tag them `preferred` so they aren't treated as knockouts.
+8. **Identify Likely Knockout Questions.** Flag anything that will likely appear as a yes/no form filter: visa sponsorship, location/remote, security clearance, specific YOE thresholds, degree requirements, on-call willingness.
+9. **Cross-reference industry signals.** Read `.claude/skills/resume-toolkit/reference/industry-signals.md`. List any implicit-but-expected keywords for this role type that are NOT in the JD but recruiters will search for anyway (e.g., a senior SWE role implicitly expects "system design" even if unstated).
+10. **Note red flags.** Anything in the JD that suggests poor fit, unrealistic scope, or potential filter mismatches with the user's background.
+11. **Write the report to a markdown file.** By default, save the full report to a `Signal Report - <Company> - <Job Title>.md` file alongside the job description (typically in the same `Job Applications/<Company>/<Job Title>/` directory the JD came from). Only skip the file and respond inline if the user explicitly asked for the report in chat or there is no obvious directory to write to.
 
 ## Output destination
 
-The full structured report is a **file artifact, not a chat dump.** Write it to disk by default (see Process step 10), then keep your chat response short:
+The full structured report is a **file artifact, not a chat dump.** Write it to disk by default (see Process step 11), then keep your chat response short:
 
 - A 1–3 sentence high-level summary (role fit, what the resume must lead with).
 - Any important flags — knockout risks, mismatches, or anything the user must act on before applying.
@@ -56,13 +57,18 @@ The file must contain these sections, in this order:
 <Closest master name or purpose from Work Experience/resume-masters.md when available; otherwise a short inferred family label. Used by build-targeted-resume to select the baseline master.>
 
 ## Required Skills
-<Comma-separated list. Use exact JD phrasing. For acronyms, include both forms: "Retrieval-Augmented Generation (RAG)".>
+<Comma-separated list. Use exact JD phrasing — this list feeds the Skills section (exact-match ATS layer), not verbatim reuse in bullets. For acronyms, include both forms once: "Retrieval-Augmented Generation (RAG)".>
 
 ## Nice-to-Have Keywords
 <Comma-separated list.>
 
 ## Action-Skill Pairs
 - <verb> <skill/object> — e.g., "Deploy RAG pipelines", "Optimize SQL queries"
+
+## Distinctive JD Phrases (do not echo)
+<Multi-word phrasings and sentence structures unique to this posting. The builder must not copy these verbatim into bullets or summary — exact terms belong in Skills when grounded; bullets match concepts with conventional terminology.>
+- <phrase>
+- <phrase>
 
 ## Implicit Industry Expectations
 <Keywords not in the JD but expected for this role type. Source: industry-signals.md.>
@@ -84,11 +90,12 @@ List every explicit minimum-experience requirement as its own line, tagged `requ
 
 ## Rules and constraints
 
-- **Use exact JD phrasing for keywords.** Recruiter searches are often literal. If the JD says "Kubernetes," don't substitute "K8s" — list both if you must.
-- **Dual-format acronyms** on first mention (e.g., "Retrieval-Augmented Generation (RAG)").
+- **Use exact JD phrasing for keywords.** Recruiter searches are often literal. If the JD says "Kubernetes," don't substitute "K8s" — list both if you must. Exact phrasing in this report is destined for the Skills section (exact-match layer), not for verbatim reuse in experience bullets.
+- **Dual-format acronyms once** in the report (e.g., "Retrieval-Augmented Generation (RAG)"). The downstream resume expands each acronym once (usually in Skills) and uses one form afterward.
+- **Capture distinctive phrases as a denylist.** Put multi-word phrasings and sentence structures unique to this posting under `Distinctive JD Phrases (do not echo)` so the builder does not reconstruct the resume in the JD's voice.
 - **Don't invent skills.** If the JD doesn't mention it and industry-signals.md doesn't flag it as implicit, leave it out.
 - **Don't editorialize.** This skill produces signals, not advice. The Build and Review skills decide how to act on them.
-- **Cap each section reasonably.** Required Skills typically 8-15 items; Nice-to-Haves 3-8; Action-Skill Pairs 5-10. If the JD has more, prioritize by frequency and section weight (Requirements > Responsibilities > About You).
+- **Cap each section reasonably.** Required Skills typically 8-15 items; Nice-to-Haves 3-8; Action-Skill Pairs 5-10; Distinctive Phrases 3-8. If the JD has more, prioritize by frequency and section weight (Requirements > Responsibilities > About You).
 
 ## What NOT to do
 

@@ -47,7 +47,7 @@ Normative rules for producing an ATS-parseable, recruiter-friendly resume. Used 
    - Title this section exactly "Skills" — a standard header ATS parsers reliably detect as a skills-section anchor. Avoid "Core Competencies" or other creative variants.
    - Comma-separated, organized by category
    - Standard categories for senior engineering: Languages | AI/ML Frameworks | Cloud & Infrastructure | Data & Databases | DevOps & Tooling
-   - Dual-format acronyms on first mention: "Retrieval-Augmented Generation (RAG)"
+   - Dual-format each acronym **once** (usually here): "Retrieval-Augmented Generation (RAG)". After that, use one form only — usually the acronym. Never re-expand the same acronym across the resume.
    - 15-25 items total is reasonable; resist the urge to list every framework you've ever touched
 
 4. **Professional Experience** (reverse-chronological)
@@ -110,6 +110,7 @@ The intended reader is a senior technical hiring manager or a technical ATS (see
 - **No negation-reversal antithesis.** "Not only X but also Y", "not just X but Y", "it's not X, it's Y", "doesn't just X; it Ys", "more than just X" — the contrast-then-pivot cadence is a strong AI tell. State the affirmative claim directly: "Transforms 2TB/day of events into queryable tables", not "doesn't just store data; it transforms it".
 - **No "in today's fast-paced [X] landscape" / "in the rapidly evolving world of [Y]"** framings. These are pure AI scaffolding and signal nothing.
 - **No symmetrical adjective stacking ("scalable, robust, and resilient infrastructure").** Pick the one that matters and cut the rest.
+- **No JD phrase echoing.** Copying distinctive multi-word phrases or sentence structures from the job description into bullets or the summary makes the resume look mechanically reconstructed from the posting — a strong over-tuned / AI-tailored signal. Match the employer's *concepts* and conventional industry terminology instead. Exact JD terms belong in the Skills section when they are true, important, and grounded in documented experience; do not spray them across every resume surface.
 
 ## Self-test
 

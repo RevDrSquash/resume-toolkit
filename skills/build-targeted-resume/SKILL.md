@@ -57,16 +57,24 @@ For the catalog of specific phrasings and verbs to avoid (em-dashes, "leveraged"
 **Do not copy the JD's target title into the resume headline or the summary's identity.** Keep the master's stable identity headline (`.role-line` and summary opener) verbatim — that is the candidate's professional identity for this role family.
 
 - The signal report's `Target Title` is for terminology mapping and ATS searchability elsewhere, not for rebuilding who the candidate is.
-- Adopt JD terminology in skills and bullets **only where it accurately maps to existing experience**. Prefer omission or an explicit gap over forced matching or inventing missing skills.
+- Adopt JD terminology via the layered model (exact phrasing in Skills when grounded; conventional terminology + bridges in bullets) **only where it accurately maps to existing experience**. Prefer omission or an explicit gap over forced matching or inventing missing skills.
 - Never invent a new identity string for a single posting.
 
-### 2. Cover required skills
+### 2. Cover required skills (layered ATS matching)
 
-Compare the signal report's `Required Skills` list against the user's actual experience (master + `Work Experience/` notes). For every required skill the user genuinely has:
+Compare the signal report's `Required Skills` list against the user's actual experience (master + `Work Experience/` notes). Optimization is **layered** so the resume stays ATS-aware without looking mechanically reconstructed from the JD:
+
+**Skills section = exact-match ATS layer.** For every required skill the user genuinely has — and only when the claim is true, important, and a reasonable claim of experience:
 
 - Add it to the dedicated `Skills` section (or promote it in the ordering if already present)
-- Use exact JD phrasing (dual-format acronyms: "Retrieval-Augmented Generation (RAG)")
-- Embed the most important 3-5 required skills into bullet points in the most recent role, paired with a metric
+- Use exact JD phrasing there
+- **Never add a JD-only skill based on adjacency.** Exact-match terms must still be grounded in documented experience (`Work Experience/` notes or the master). If the user has a related but different skill, do not invent the JD's term; note the gap instead
+
+**Bullets and summary = conventional terminology, not JD echo.** Embed the most important 3-5 required *concepts* into recent-role bullets paired with a metric, using conventional industry terminology the JD also uses — not distinctive multi-word JD phrases or sentence structures. Prefer the signal report's `Distinctive JD Phrases (do not echo)` list as a denylist for bullets/summary. Match the employer's concepts; do not copy the posting's voice.
+
+**Terminology bridging.** When the canonical notes or master use an internal / non-standard term for something the JD requires, make the connection explicit in the bullet or Skills entry (e.g., bridge the canonical term to the accurate industry/JD equivalent). Do not force reviewers to infer the mapping, and do not silently rename the accomplishment to the JD's phrasing.
+
+**Acronyms once.** Ensure both the expanded form and the acronym appear somewhere once when useful for ATS (the Skills section is the natural home: "Retrieval-Augmented Generation (RAG)"). After that first dual-format, use one form only — usually the acronym. Do not re-expand the same acronym throughout the resume.
 
 For skills the user doesn't have: do not invent them. Note the gap for the user to consider.
 
@@ -81,28 +89,30 @@ For skills the user doesn't have: do not invent them. Note the gap for the user 
 
 ### 3. Apply the 80/20 baseline
 
-The copied master **is** the ~80% stable core. The ~20% swappable layer for this posting:
+The copied master **is** the ~80% stable core. The ~20% swappable layer for this posting (selection and ordering first; minimize semantic rewrites):
 
 - Professional Summary emphasis (keep the identity opener; adjust the following sentences for role-relevant capabilities and 1-2 standout metrics — never a stack, never a new identity)
-- Skills section top-of-list ordering and JD-phrasing variants of skills the user already has
-- Top bullet of most recent role; select/reorder bullets to surface the most relevant evidence
+- Skills section top-of-list ordering and exact JD phrasing for skills the user already has (the exact-match layer)
+- Bullet selection and reordering to surface the most relevant evidence; top bullet of most recent role
 - Projects or secondary emphasis the master de-emphasized for this role family
 
-Preserve from the master: identity headline, employment chronology, employers, dates, titles, and grounded claims. Do not rebuild the candidate around the target title.
+Preserve from the master: identity headline, employment chronology, employers, dates, titles, grounded claims, and canonical accomplishment wording wherever selection already covers the requirement. Do not rebuild the candidate around the target title.
 
-### 4. Contextualize bullets with Action-Skill Pairs
+### 4. Cover Action-Skill Pairs by selection first
 
-For each verb-skill pair in the signal report, write or revise a bullet in the relevant role that:
+For each verb-skill pair in the signal report, prefer **selecting and reordering** existing master bullets that already carry the pair (or a truthful conventional equivalent) over rewriting them. Tailor aggressively through bullet selection, ordering, project choice, summary emphasis, and skills ordering; **minimize unnecessary semantic rewrites of canonical accomplishments**.
+
+Only write or revise a bullet when no grounded master bullet can truthfully carry the keyword. When you do rewrite, keep the verb → skill → metric shape:
 
 - Starts with the action verb (or a stronger synonym)
-- Names the skill/technology
+- Names the skill/technology in conventional terminology (not a distinctive JD phrase)
 - Ends with a quantified outcome (latency reduced X%, throughput Y, cost Z, headcount unblocked, etc.)
 
 This verb → skill → metric shape is Google's X-Y-Z formula ("Accomplished [X] as measured by [Y], by doing [Z]"): the action is the accomplishment, the metric is the measurement, the skill/method is how. It pairs a keyword with a number in the exact structure an ATS and a skimming reader both extract cleanly.
 
 **Format every metric as a numeral with its unit or symbol** — `50%`, `$2M`, `80k msgs/sec`, `4M+ queries/month` — never spelled out (`fifty percent`) and never a vague quantifier (`roughly half`, `many`, `significant`). Numerals are what survives an ATS scan and what a 15-second skim catches; words and vague estimates get missed or read as filler. Where the underlying data supports it, frame the change against a baseline or timeframe (`from 4s to 800ms`, `per quarter`, `within 90 days`) so the number is comparable and concrete. Do not invent a baseline to fit the pattern — if you only have the end-state number, state just that.
 
-Example: signal report has "Deploy RAG pipelines" → bullet: "Deployed production RAG pipeline on AWS Bedrock serving 4M+ queries/month with p95 latency under 800ms."
+Example: signal report has "Deploy RAG pipelines" and the master already has a strong RAG deployment bullet → promote that bullet; do not rewrite it to echo the JD. Only if nothing covers it: "Deployed production RAG pipeline on AWS Bedrock serving 4M+ queries/month with p95 latency under 800ms."
 
 ### 5. Cover implicit industry expectations
 
@@ -143,14 +153,15 @@ Do not render the PDF from this skill — that's `publish-resume`'s job.
 
 ## Rules and constraints
 
-- **Never invent skills, projects, or metrics.** If the user hasn't claimed it in their input, don't put it on the resume. Flag gaps for the user instead.
+- **Never invent skills, projects, or metrics.** If the user hasn't claimed it in their input, don't put it on the resume. Flag gaps for the user instead. Never add a JD-only skill on adjacency — exact-match terms in Skills must still be grounded in documented experience.
 - **Keep the stable identity.** Do not paste the JD's `Target Title` into `.role-line` or the summary's identity opener.
-- **Mirror the JD's exact phrasing for required skills** (in skills/bullets), not for the candidate's identity. Don't paraphrase or substitute synonyms unless dual-formatting an acronym.
+- **Layer exact-match vs. conventional terminology.** Put exact JD phrasing in the Skills section (grounded terms only). In bullets and summary, match the employer's concepts and conventional industry terminology — do not lift distinctive multi-word JD phrases or sentence structures. Dual-format each acronym once (usually in Skills); use the short form afterward.
+- **Bridge terminology when it differs.** When the master/notes use an internal term for a JD-required concept, make the mapping explicit rather than forcing reviewers to infer it or silently renaming the accomplishment.
 - **Quantify or cut.** Every bullet under a recent role should have a number or a concrete outcome. Bullets without either are filler — remove or rewrite. Write metrics as numerals with units/symbols (`50%`, `$2M`, `80k req/s`), never spelled out (`fifty percent`) or vague (`many`, `significant`, `roughly half`).
 - **No fluff words.** Strip "results-driven", "synergy", "rockstar", "team player". They cost space and signal nothing.
-- **Don't over-tailor.** Prefer omission over forced matching. Modular swaps in the summary emphasis, skills ordering, and top bullets — not a full rewrite that mimics the JD.
+- **Don't over-tailor.** Prefer omission over forced matching. Tailor via selection, ordering, project choice, summary emphasis, and skills ordering — minimize semantic rewrites of canonical accomplishments. A resume that looks mechanically reconstructed from the JD reads as over-tuned or AI-generated; preserve high-value keyword matching while hiding the optimization process itself.
 - **Output the full resume, not a diff.** Even for an update, produce the complete final document so the user can replace their working copy.
-- **Apply the AI-sounding patterns rules from `.claude/skills/resume-toolkit/reference/formatting-guide.md`.** That section is the source of truth for em-dashes, puffery on well-known entities, AI-favorite verbs ("leveraged", "utilized", "spearheaded"), tricolon openers, fast-paced-landscape framings, and adjective stacking. A resume that reads as AI-written gets discarded.
+- **Apply the AI-sounding patterns rules from `.claude/skills/resume-toolkit/reference/formatting-guide.md`.** That section is the source of truth for em-dashes, puffery on well-known entities, AI-favorite verbs ("leveraged", "utilized", "spearheaded"), tricolon openers, fast-paced-landscape framings, adjective stacking, and JD phrase echoing. A resume that reads as AI-written gets discarded.
 
 ## Gotchas
 
@@ -163,17 +174,20 @@ Do not render the PDF from this skill — that's `publish-resume`'s job.
 Content:
 - [ ] Stable identity headline from the selected master / manifest appears in `.role-line` and the summary opener — **not** the JD's `Target Title`
 - [ ] Selected master is named in the chat response (which master, why)
-- [ ] Every Required Skill the user genuinely has is covered
-- [ ] Top 3-5 required keywords are embedded in recent-role bullets with metrics
+- [ ] Every Required Skill the user genuinely has is covered (exact JD phrasing in Skills; conventional terminology in bullets) — no JD-only skills added on adjacency
+- [ ] Top 3-5 required concepts are embedded in recent-role bullets with metrics
+- [ ] No distinctive JD phrases or sentence structures echoed in bullets/summary (check the signal report's `Distinctive JD Phrases` denylist)
+- [ ] Terminology bridges are explicit where the master/notes use an internal term for a JD-required concept
+- [ ] Canonical master bullet wording preserved where selection/reordering already covers the requirement — no unnecessary semantic rewrites
 - [ ] Every required per-skill minimum from `Minimum Years of Experience` is backed by the keyword appearing across dated roles whose durations sum to at least the minimum (not just in the Skills section); minimums the user can't truthfully reach are flagged as gaps, not faked
 - [ ] Date format is identical across every role (no mixed styles that would break the parser's duration math)
 - [ ] Overlapping roles still carry a part-time / consulting clarifier
 - [ ] All metrics are numerals with units/symbols (`50%`, `$2M`), never spelled out or vague (`fifty percent`, `many`, `significant`)
 - [ ] All Implicit Industry Expectations appear at least once
-- [ ] Acronyms are dual-formatted on first mention
+- [ ] Each acronym is dual-formatted once (expanded + acronym, usually in Skills); subsequent mentions use one form only — no repeated expansions
 - [ ] Dates are `Mon YYYY` format throughout
 - [ ] No placeholder tokens (`[FULL NAME]`, `[City, Region, ...]`, etc.) remain from the template
-- [ ] No em-dashes (`—`) anywhere; no other AI-sounding patterns from `.claude/skills/resume-toolkit/reference/formatting-guide.md` (puffery on well-known entities, "leveraged"/"utilized" verbs, tricolons, negation-reversal antithesis like "not just X but Y" / "it's not X, it's Y", fast-paced-landscape framings, adjective stacking)
+- [ ] No em-dashes (`—`) anywhere; no other AI-sounding patterns from `.claude/skills/resume-toolkit/reference/formatting-guide.md` (puffery on well-known entities, "leveraged"/"utilized" verbs, tricolons, negation-reversal antithesis like "not just X but Y" / "it's not X, it's Y", fast-paced-landscape framings, adjective stacking, JD phrase echoing)
 - [ ] No semicolons in bullets (split the ideas or use a comma/period)
 - [ ] Summary anchors on 1-2 standout metrics (numerals, role-relevant), not zero and not a stats dump (per `formatting-guide.md` Professional Summary rules)
 - [ ] Bullets read at ~one line and the summary at 3-4 sentences; nothing sprawls into a wall of text (`.claude/skills/resume-toolkit/scripts/lint_resume.py` reports zero length findings)
