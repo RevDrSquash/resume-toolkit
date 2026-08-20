@@ -89,15 +89,16 @@ When a skill's role attribution or rough duration is missing from the notes, fil
 Each targeted resume is ~80% stable core and ~20% swappable per application. **The 80% baseline is literally the selected master resume** (see "Resume masters").
 
 - **80% baseline (the master):** Header, education, certifications, foundational skills, recent roles' core bullets, employment chronology, grounded claims, canonical accomplishment wording, and the **stable professional identity** for that role family.
-- **20% swappable per JD:** Summary emphasis after the identity opener; skills ordering and exact JD phrasing in the Skills section (grounded terms only); bullet *selection* and *ordering*; project choice; conventional terminology and explicit bridges in bullets where the JD's concepts map to real experience. Minimize unnecessary semantic rewrites of canonical accomplishments.
+- **20% swappable per JD:** Summary emphasis after the identity opener; **Relevant Highlights** (2–3 compressed JD-fit accomplishments selected from the master); skills ordering and exact JD phrasing in the Skills section (grounded terms only); bullet *selection* and *ordering*; project choice; conventional terminology and explicit bridges in bullets where the JD's concepts map to real experience. Minimize unnecessary semantic rewrites of canonical accomplishments.
 
 Swap zones, ordered by leverage:
 
 1. The professional summary's emphasis sentences (keep the stable identity opener; do **not** paste the JD's target title into the identity)
-2. The Skills section's ordering and exact JD phrasing for skills the user already has (exact-match ATS layer; dual-format each acronym once here)
-3. Bullet selection and reordering to surface the most relevant evidence; top bullet of the most recent role
-4. Project / secondary emphasis choice
-5. Implicit-industry-expectation keywords and terminology bridges woven into existing bullets — without echoing distinctive JD phrases
+2. Relevant Highlights — 2–3 compressed accomplishments from the master that most directly prove fit (employer/project + measurable outcome; fuller non-verbatim counterpart stays in chronology)
+3. The Skills section's ordering and exact JD phrasing for skills the user already has (exact-match ATS layer; dual-format each acronym once here)
+4. Bullet selection and reordering to surface the most relevant evidence; top bullet of the most recent role
+5. Project / secondary emphasis choice
+6. Implicit-industry-expectation keywords and terminology bridges woven into existing bullets — without echoing distinctive JD phrases
 
 Don't touch:
 
@@ -116,7 +117,7 @@ Exact-match optimization is useful for ATS and lowers human inference cost, but 
 2. **Skills section = exact-match layer.** Include exact JD terms when they are true, important, and a reasonable claim of experience grounded in `Work Experience/` notes. Never add a JD-only skill on adjacency alone.
 3. **Bullets / summary = conventional terminology + bridges.** Match the employer's concepts and conventional industry terms; do not lift distinctive multi-word JD phrases or sentence structures. When the canonical notes use an internal term for a JD-required concept, bridge explicitly to the accurate industry/JD equivalent rather than forcing reviewers to infer the mapping or silently renaming the accomplishment.
 4. **Acronyms once.** Both expanded form and acronym appear somewhere once (usually in Skills); afterward use one form only.
-5. **Tailor by selection, not rewrite.** Prefer bullet selection, ordering, project choice, summary emphasis, and skills ordering. Minimize semantic rewrites of canonical accomplishments.
+5. **Tailor by selection, not rewrite.** Prefer bullet selection, ordering, project choice, summary emphasis, Relevant Highlights selection, and skills ordering. Minimize semantic rewrites of canonical accomplishments.
 
 ## Resume masters
 
