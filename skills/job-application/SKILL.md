@@ -1,31 +1,27 @@
 ---
 name: job-application
-description: Orchestrate the end-to-end resume tailoring workflow for a specific job. Parses the JD, drafts a tailored resume, audits it, iterates with the user, and publishes the final PDF. Trigger when the user wants to apply for a specific posting, tailor a resume for a job, run the full resume flow end-to-end, or continue from a job-scout shortlist entry. Composes fetch-job-description, extract-job-signals, build-targeted-resume, review-resume, publish-resume, and update-application-tracker.
+description: Orchestrate the end-to-end resume tailoring workflow for a specific job. Parses the JD, drafts a tailored resume, audits it, iterates with the user, and publishes the final PDF. Trigger when the user wants to apply for a specific posting, tailor a resume for a job, or run the full resume flow end-to-end. Composes fetch-job-description, extract-job-signals, build-targeted-resume, review-resume, publish-resume, and update-application-tracker.
 ---
 
 # Job Application
 
 Orchestrate the full resume tailoring workflow for a specific job. This skill is glue: it sequences utility skills, keeps the application tracker in sync, and gates the whole thing on user review. It does not duplicate their logic — for each step, invoke the utility.
 
-Discovery (`job-scout`) is optional and upstream. Once a JD markdown file exists in the job folder, the rest of this workflow is unchanged.
-
 ## When to use
 
 - User shares a job description (URL, pasted text, file) and wants to apply
-- User picks an entry from a `job-scout` shortlist ("let's apply to #2", "start the flow for X on the shortlist")
 - User says things like "tailor my resume for this role", "let's apply to X", "run the full flow for this posting"
 - User wants the whole sequence run, not just one step
 
-If the user explicitly asks for a single step ("just extract signals", "just review this resume against the JD"), invoke that utility skill directly. This skill is for the full workflow only. If they only want discovery, invoke `job-scout` instead.
+If the user explicitly asks for a single step ("just extract signals", "just review this resume against the JD"), invoke that utility skill directly. This skill is for the full workflow only.
 
 ## Inputs
 
 Accept **any one** of these JD intake forms:
 
-1. **Shortlist entry** — ranked item from `Job Applications/Shortlist - <date>.md` (preferred after a scout run). Includes URL + path to a cached JD under `Job Applications/_Scout/`.
-2. **URL** — LinkedIn or ATS/company career page.
-3. **Existing markdown file** or pasted JD text.
-4. **Manual** — user already saved `JD - <Company> - <Role>.md` in the job folder.
+1. **URL** — LinkedIn or ATS/company career page.
+2. **Existing markdown file** or pasted JD text.
+3. **Manual** — user already saved `JD - <Company> - <Role>.md` in the job folder.
 
 Also required:
 
@@ -43,10 +39,9 @@ Run the steps in order. Each step delegates to a utility skill; stay inside the 
 
 | Intake | Action |
 |--------|--------|
-| Shortlist / scout cache | **Copy or move** `Job Applications/_Scout/JD - <Company> - <Role>.md` into the job folder. **Do not re-fetch.** Seed tracker metadata from the shortlist (salary, location, posted date, JD URL). |
 | Existing file / paste | Save into the job folder if not already there. |
 | LinkedIn URL | Invoke `linkedin-job-to-markdown`; save into the job folder. |
-| Any other URL | Invoke `fetch-job-description` (OpenPostings-first via `scripts/fetch_jd.py`). **Do not use WebFetch** to obtain JD text — it paraphrases. LinkedIn skill and direct HTTP inside the fetcher are the fallbacks when OpenPostings cannot serve the URL. |
+| Any other URL | Invoke `fetch-job-description` (`scripts/fetch_jd.py`). **Do not use WebFetch** to obtain JD text — it paraphrases. |
 
 Create the `Job Applications/<Company>/<Role>/` directory if needed.
 
@@ -75,11 +70,7 @@ Do not advance to step 5 without explicit user approval, even if the review repo
 Invoke `publish-resume` on the approved HTML. The utility renders the PDF, verifies page count, and runs the Notepad parseability check. Report the PDF path and parseability result back to the user. Then bump tracker status to `ready-to-submit` and record `resumeHtml` + `resumePdf` filenames on the row.
 
 ### 6. Hand off to the user
-Tell the user the resume is ready and the next move is theirs: review the PDF one last time, submit the application, and report back. When they confirm submission:
-
-1. Run `update-application-tracker` to flip status to `submitted` and capture the `dateSubmitted` they give you. The HTML tracker remains the **only** canonical status record (interview/offer/etc. live only there).
-2. Additionally run `openpostings applied "<jd-url>"` so discovery excludes the posting going forward. Company/title are auto-resolved from the local DB; pass `--title` / `--company` only for postings that are not in it (e.g. manually found LinkedIn jobs). Recording an application clears any ignored state on the posting. If the CLI or server is unavailable, warn and continue — do not block tracker update.
-
+Tell the user the resume is ready and the next move is theirs: review the PDF one last time, submit the application, and report back. When they confirm submission, run `update-application-tracker` to flip status to `submitted` and capture the `dateSubmitted` they give you. The HTML tracker is the **only** canonical status record (interview/offer/etc. live only there).
 
 ## Output folder layout
 
@@ -105,16 +96,16 @@ If the user wants the review audit persisted, add `Review - <Company> - <Role>.m
 | Step 0 — posting not yet tracked                  | Add row as `not-started` with available metadata          |
 | After step 1 — signal report saved                | Status → `drafting`                                       |
 | After step 5 — PDF rendered, page count verified  | Status → `ready-to-submit`; set `resumeHtml`, `resumePdf` |
-| User confirms they submitted the application      | Status → `submitted`; set `dateSubmitted`; also `openpostings applied "<url>"` (best-effort) |
-| User reports interview / offer / rejection / skip | Status → matching value; capture context in `notes` (tracker only — no OpenPostings sync) |
+| User confirms they submitted the application      | Status → `submitted`; set `dateSubmitted`                 |
+| User reports interview / offer / rejection / skip | Status → matching value; capture context in `notes`       |
 
-Tracker edits never advance status on assumption — only on user confirmation. Reach for the tracker skill's full status table (`update-application-tracker`) when the transition is unclear. OpenPostings applied/ignored state is a discovery-side dedupe ledger only — never the source of truth for interview/offer/etc.
+Tracker edits never advance status on assumption — only on user confirmation. Reach for the tracker skill's full status table (`update-application-tracker`) when the transition is unclear.
 
 ## Rules and constraints
 
 - **Build from canonical sources, never from a previous resume.** Formatting/layout comes from `.claude/skills/resume-toolkit/skills/build-targeted-resume/resume-template.html` (+ `.claude/skills/resume-toolkit/reference/formatting-guide.md`); experience content comes from the `Work Experience/` notes; personal facts come from `Work Experience/personal-details.md`. Previous resumes and artifacts under `Job Applications/<Company>/<Role>/` are **presumed stale** — consult them only as a last resort when a canonical source is genuinely missing something, verify against canonical, and prefer back-filling the canonical source over copying the artifact forward. This is what lets the user change layout or experience **once** and have every future resume reflect it. Full rule: "Canonical sources & precedence" in `.claude/skills/resume-toolkit/reference/application-protocol.md`.
 - **Don't duplicate utility logic.** Each utility owns its piece — JD fetch, signal extraction, drafting, auditing, rendering, tracking. This skill calls them; it does not reinvent them.
-- **OpenPostings-first for JD URLs.** Prefer `fetch-job-description` over WebFetch. LinkedIn uses `linkedin-job-to-markdown`. Manual paste/file still works.
+- **`fetch-job-description` for JD URLs.** Prefer it over WebFetch, which paraphrases. LinkedIn uses `linkedin-job-to-markdown`. Manual paste/file still works.
 - **The iteration gate is non-negotiable.** Never auto-publish. The user must approve the current draft before step 5.
 - **All artifacts go in the job folder.** Single `Job Applications/<Company>/<Role>/` location for the full record of the application.
 - **The tracker is canonical.** Every status change goes through `update-application-tracker`. Don't edit `index.html` by hand from this skill.
@@ -129,4 +120,3 @@ Tracker edits never advance status on assumption — only on user confirmation. 
 - [ ] PDF rendered and Notepad test result reported
 - [ ] All artifacts under `Job Applications/<Company>/<Role>/`
 - [ ] Tracker row exists in `Job Applications/index.html` and reflects the current status (`ready-to-submit` after publish; `submitted` once the user confirms they've sent it)
-- [ ] On confirmed submission: `openpostings applied` attempted (or warned if CLI/server unavailable)

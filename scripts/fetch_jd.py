@@ -1,9 +1,8 @@
-"""Fetch a job description as exact markdown via OpenPostings CLI (preferred) or HTTP.
+"""Fetch a job description as exact markdown over HTTP.
 
-Acquisition order:
-  1. `openpostings jd <url> --json` — normalized text (db / ats-api) or raw HTML
-  2. On server_down / network / CLI missing: direct HTTP GET, treat as raw HTML
-  3. Raw HTML → readability main-content extraction + HTML→markdown + invisible strip
+Pipeline:
+  1. Plain HTTP GET of the posting URL
+  2. Readability main-content extraction + HTML→markdown + invisible-content strip
 
 Always strips zero-width characters. Flags (never strips) likely prompt-injection
 patterns into YAML frontmatter `warnings`.
@@ -22,8 +21,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import shutil
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -250,56 +247,11 @@ def sanity_check(text: str) -> Optional[str]:
 
 
 # ---------------------------------------------------------------------------
-# OpenPostings CLI + HTTP
+# HTTP
 # ---------------------------------------------------------------------------
 
-def resolve_openpostings_cmd() -> Optional[List[str]]:
-    """Return argv prefix to invoke the OpenPostings CLI (Windows npm .cmd-safe)."""
-    for name in ("openpostings", "openpostings.cmd", "openpostings.CMD"):
-        path = shutil.which(name)
-        if not path:
-            continue
-        lower = path.lower()
-        if lower.endswith(".cmd") or lower.endswith(".bat"):
-            # CreateProcess cannot launch npm's .cmd shims directly.
-            return ["cmd", "/c", path]
-        return [path]
-    return None
-
-
-def run_openpostings_jd(url: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
-    """Return (envelope_dict, error_message). envelope is None on hard failure."""
-    argv_prefix = resolve_openpostings_cmd()
-    if not argv_prefix:
-        return None, "cli_missing"
-
-    try:
-        proc = subprocess.run(
-            [*argv_prefix, "jd", url, "--json"],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            timeout=120,
-        )
-    except FileNotFoundError:
-        return None, "cli_missing"
-    except subprocess.TimeoutExpired:
-        return None, "timeout"
-
-    stdout = (proc.stdout or "").strip()
-    if not stdout:
-        return None, f"empty_stdout exit={proc.returncode} stderr={(proc.stderr or '')[:200]}"
-
-    try:
-        envelope = json.loads(stdout)
-    except json.JSONDecodeError:
-        return None, f"invalid_json exit={proc.returncode}"
-
-    return envelope, None
-
-
-def http_get(url: str) -> Tuple[Optional[str], Optional[str]]:
+def http_get(url: str) -> Tuple[Optional[str], Optional[str], Optional[int]]:
+    """Return (html, error_message, http_status). status is None for transport errors."""
     try:
         resp = requests.get(
             url,
@@ -314,21 +266,12 @@ def http_get(url: str) -> Tuple[Optional[str], Optional[str]]:
         )
         resp.raise_for_status()
         resp.encoding = resp.apparent_encoding or "utf-8"
-        return resp.text, None
+        return resp.text, None, resp.status_code
+    except requests.HTTPError as exc:
+        status = exc.response.status_code if exc.response is not None else None
+        return None, str(exc), status
     except requests.RequestException as exc:
-        return None, str(exc)
-
-
-def source_label(cli_source: Optional[str], via_raw_extract: bool) -> str:
-    if via_raw_extract:
-        return "raw-extract"
-    if cli_source == "db":
-        return "cli-db"
-    if cli_source == "ats-api":
-        return "cli-ats-api"
-    if cli_source == "raw-html":
-        return "raw-extract"
-    return "raw-extract"
+        return None, str(exc), None
 
 
 # ---------------------------------------------------------------------------
@@ -358,89 +301,14 @@ def fetch_jd(
         "sanity": None,
     }
 
-    text: Optional[str] = None
-    via_raw = False
-    cli_source: Optional[str] = None
+    html, http_err, status = http_get(url)
+    if http_err or not html:
+        meta["error"] = http_err or "empty_http_body"
+        # A dead posting should not be retried; anything else may be transient.
+        meta["error_kind"] = "not_found" if status in (404, 410) else "network"
+        return None, meta
 
-    envelope, cli_err = run_openpostings_jd(url)
-
-    if cli_err == "cli_missing":
-        meta["warnings"].append("cli_missing_fallback_http")
-        html, http_err = http_get(url)
-        if http_err or not html:
-            meta["error"] = http_err or "empty_http_body"
-            meta["error_kind"] = "network"
-            return None, meta
-        text = extract_from_html(html)
-        via_raw = True
-        cli_source = None
-    elif cli_err:
-        # Unexpected CLI failure — try HTTP once
-        meta["warnings"].append(f"cli_error:{cli_err}")
-        html, http_err = http_get(url)
-        if http_err or not html:
-            meta["error"] = cli_err
-            meta["error_kind"] = "error"
-            return None, meta
-        text = extract_from_html(html)
-        via_raw = True
-    else:
-        assert envelope is not None
-        if envelope.get("ok") is True and not envelope.get("raw"):
-            text = strip_zero_width(envelope.get("text") or "")
-            cli_source = envelope.get("source")
-            via_raw = False
-        elif envelope.get("raw") is True:
-            html = envelope.get("text") or ""
-            text = extract_from_html(html)
-            cli_source = envelope.get("source") or "raw-html"
-            via_raw = True
-        else:
-            kind = envelope.get("error_kind") or "error"
-            meta["error"] = envelope.get("error") or kind
-            meta["error_kind"] = kind
-
-            if kind == "not_found":
-                return None, meta
-
-            if kind in ("server_down", "network"):
-                # Retry CLI once, then HTTP
-                envelope2, cli_err2 = run_openpostings_jd(url)
-                if (
-                    envelope2
-                    and envelope2.get("ok") is True
-                    and not envelope2.get("raw")
-                ):
-                    text = strip_zero_width(envelope2.get("text") or "")
-                    cli_source = envelope2.get("source")
-                    via_raw = False
-                    meta["error"] = None
-                    meta["error_kind"] = None
-                elif envelope2 and envelope2.get("raw") is True:
-                    text = extract_from_html(envelope2.get("text") or "")
-                    cli_source = envelope2.get("source") or "raw-html"
-                    via_raw = True
-                    meta["error"] = None
-                    meta["error_kind"] = None
-                else:
-                    html, http_err = http_get(url)
-                    if http_err or not html:
-                        return None, meta
-                    text = extract_from_html(html)
-                    via_raw = True
-                    meta["error"] = None
-                    meta["error_kind"] = None
-                    meta["warnings"].append("http_fallback_after_cli_error")
-            else:
-                # empty_description / error — try HTTP as last resort for empty
-                html, http_err = http_get(url)
-                if http_err or not html:
-                    return None, meta
-                text = extract_from_html(html)
-                via_raw = True
-                meta["error"] = None
-                meta["error_kind"] = None
-                meta["warnings"].append(f"http_fallback_after_{kind}")
+    text = extract_from_html(html)
 
     if not text or not text.strip():
         meta["error"] = "empty_description"
@@ -456,7 +324,7 @@ def fetch_jd(
         meta["sanity"] = sanity
         meta["warnings"].append(f"sanity:{sanity}")
 
-    src = source_label(cli_source, via_raw)
+    src = "raw-extract"
     meta["source"] = src
     meta["ok"] = True
 

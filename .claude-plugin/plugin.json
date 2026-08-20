@@ -1,7 +1,7 @@
 {
   "name": "resume-toolkit",
-  "version": "0.2.0",
-  "description": "End-to-end resume tailoring and job-application toolkit: optional OpenPostings job discovery, extract JD signals, build ATS-optimized resumes, review against a JD, publish to ATS-parseable PDF, and track applications.",
+  "version": "0.3.0",
+  "description": "End-to-end resume tailoring and job-application toolkit: extract JD signals, build ATS-optimized resumes, review against a JD, publish to ATS-parseable PDF, and track applications.",
   "author": {
     "name": "RevDrSquash"
   }
