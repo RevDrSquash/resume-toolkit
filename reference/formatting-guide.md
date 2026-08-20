@@ -43,14 +43,23 @@ Normative rules for producing an ATS-parseable, recruiter-friendly resume. Used 
    - **Anchor the summary with one — at most two — of your strongest, most role-relevant metrics, then stop.** A single high-impact number in the opening establishes credibility instantly and is what the 7-second skim rewards: "Reduced hallucination rates 40%", "Cut inference cost 50%", "Scaled to 100k req/s". Make it specific and, where it lands cleanly, a delta ("from 4s to 800ms"), not a vague claim ("significantly improved"). One or two is the ceiling. A summary *stacked* with metrics — "serving 200 organizations at 100k requests/day, driving a 30% latency reduction across..." — reads as a stats dump and erodes the human voice; that's the failure mode to avoid. Pick the figure(s) most relevant to this JD; the remaining numbers belong in the bullets, where the full proof lives.
    - **Cap the length.** 3-4 sentences, ~50-80 words. Past ~600 characters the summary reads as a wall of text and `lint_resume.py` flags it; trim back to the essentials rather than letting it sprawl.
 
-3. **Skills**
+3. **Relevant Highlights** (tailored resumes only; 2–3 items)
+   - Title this section exactly "Relevant Highlights".
+   - Present only on tailored resumes — masters leave the template block commented out; `build-targeted-resume` uncomments and fills it for a specific JD.
+   - Select 2–3 accomplishments from the chosen master that most directly prove fit for the target role.
+   - Each highlight is a compressed one-liner with enough context to identify the **employer or project** plus the **measurable outcome or technical proof**.
+   - Preserve the same accomplishment in its chronological employer section, but **do not duplicate it verbatim**: compressed highlight on top, fuller contextualized version in chronology.
+   - Do not introduce new claims or wording that is less grounded than the source/master.
+   - When space is tight, remove lower-value chronological bullets **before** removing provenance for a highlighted claim.
+
+4. **Skills**
    - Title this section exactly "Skills" — a standard header ATS parsers reliably detect as a skills-section anchor. Avoid "Core Competencies" or other creative variants.
    - Comma-separated, organized by category
    - Standard categories for senior engineering: Languages | AI/ML Frameworks | Cloud & Infrastructure | Data & Databases | DevOps & Tooling
    - Dual-format each acronym **once** (usually here): "Retrieval-Augmented Generation (RAG)". After that, use one form only — usually the acronym. Never re-expand the same acronym across the resume.
    - 15-25 items total is reasonable; resist the urge to list every framework you've ever touched
 
-4. **Professional Experience** (reverse-chronological)
+5. **Professional Experience** (reverse-chronological)
    - Format per role:
      ```
      Job Title | Employer Name | City, State (or Remote)
@@ -61,13 +70,14 @@ Normative rules for producing an ATS-parseable, recruiter-friendly resume. Used 
    - 3-6 bullets for recent roles, 2-3 for older ones
    - Every bullet in a role from the last 5 years should have a number or a concrete outcome
    - Roles older than 10 years: condense to a "Previous Experience" block with no bullets, just titles/employers/dates
+   - If a bullet backs a Relevant Highlight, keep that chronological provenance when pruning; cut lower-value unrelated bullets first.
 
-5. **Education**
+6. **Education**
    - Degree, Major, Institution, Graduation Year
    - Omit GPA after ~5 years experience unless exceptional
    - List relevant coursework only if early-career
 
-6. **Certifications** (optional)
+7. **Certifications** (optional)
    - Full title + acronym: "AWS Certified Solutions Architect – Professional (AWS-SAP)"
 
 ## Date formatting (hard rules)

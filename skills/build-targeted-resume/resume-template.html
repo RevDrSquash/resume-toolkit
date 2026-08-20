@@ -13,7 +13,10 @@
   - @page is letter, 0.55in/0.6in margins.
 
   Section order matches the styled output we settled on:
-  Header -> Summary -> Work Experience -> Education -> Skills.
+  Header -> Summary -> Relevant Highlights (tailored only) -> Work Experience
+  -> Education -> Skills.
+  "Relevant Highlights" ships commented out: masters leave it commented;
+  build-targeted-resume uncomments and fills it for a specific JD.
   The section is titled "Skills" (not "Core Competencies") so ATS parsers
   reliably detect it as a standard skills-section anchor.
   (formatting-guide.md prefers Skills before Experience for plain ATS;
@@ -152,6 +155,25 @@
     <hr class="section-rule">
     <p class="summary">[3-4 sentences. Sentence 1 keeps the stable identity headline + years + core focus. Sentences 2-3 specific high-signal capabilities tied to the role. Optional sentence 4 for scope/scale or recent-focus narrative. Include 1-2 standout role-relevant metrics, not a stack.]</p>
   </section>
+
+  <!--
+    Relevant Highlights — tailored resumes only.
+    Masters leave this block commented out. build-targeted-resume uncomments
+    it and fills 2-3 compressed accomplishments that most directly prove fit
+    for the target JD. Keep the fuller contextualized version in chronology;
+    do not duplicate verbatim.
+  -->
+  <!--
+  <section>
+    <h2>Relevant Highlights</h2>
+    <hr class="section-rule">
+    <ul class="bullets">
+      <li>[Compressed accomplishment: employer/project anchor + measurable outcome or technical proof.]</li>
+      <li>[Compressed accomplishment: employer/project anchor + measurable outcome or technical proof.]</li>
+      <li>[Optional third: employer/project anchor + measurable outcome or technical proof.]</li>
+    </ul>
+  </section>
+  -->
 
   <section>
     <h2>Work Experience</h2>

@@ -92,6 +92,7 @@ For skills the user doesn't have: do not invent them. Note the gap for the user 
 The copied master **is** the ~80% stable core. The ~20% swappable layer for this posting (selection and ordering first; minimize semantic rewrites):
 
 - Professional Summary emphasis (keep the identity opener; adjust the following sentences for role-relevant capabilities and 1-2 standout metrics — never a stack, never a new identity)
+- **Relevant Highlights** — 2–3 compressed accomplishments selected from the master that most directly prove JD fit (added during tailoring; not present in masters)
 - Skills section top-of-list ordering and exact JD phrasing for skills the user already has (the exact-match layer)
 - Bullet selection and reordering to surface the most relevant evidence; top bullet of most recent role
 - Projects or secondary emphasis the master de-emphasized for this role family
@@ -114,22 +115,31 @@ This verb → skill → metric shape is Google's X-Y-Z formula ("Accomplished [X
 
 Example: signal report has "Deploy RAG pipelines" and the master already has a strong RAG deployment bullet → promote that bullet; do not rewrite it to echo the JD. Only if nothing covers it: "Deployed production RAG pipeline on AWS Bedrock serving 4M+ queries/month with p95 latency under 800ms."
 
-### 5. Cover implicit industry expectations
+### 5. Select Relevant Highlights
+
+Uncomment the template's `Relevant Highlights` block (masters leave it commented) and fill **2–3** compressed accomplishments from the selected master that most directly prove fit for this JD. Place the section after Summary and before Work Experience.
+
+- Each highlight is a concise one-liner with enough context to identify the **employer or project** plus the **measurable outcome or technical proof**.
+- Preserve the same accomplishment in its chronological employer section, but **do not duplicate it verbatim**: use a compressed top-level highlight and the fuller/contextualized version in chronology.
+- Do **not** introduce new claims or wording that is less grounded than the source/master. Compress and re-anchor; do not invent.
+- Prefer selecting the strongest JD-fit evidence even when it lives under an older role — that is the point of surfacing it early.
+
+### 6. Cover implicit industry expectations
 
 For each item in the signal report's `Implicit Industry Expectations`, ensure it appears at least once in the resume — typically in the Skills section or woven into an existing bullet. Don't pad bullets just to fit these in.
 
-### 6. Preserve layout; fill only content gaps
+### 7. Preserve layout; fill only content gaps
 
 The master already carries the correct HTML structure and CSS from the blank template. When editing:
 
-- Keep section order, classes, and styling intact
+- Keep section order, classes, and styling intact (including uncommenting Relevant Highlights for tailored output)
 - Update the `<title>` to `Resume - <Company> - <Role>` style naming as appropriate
 - Pull header contact info and Education from `personal-details.md` if the master is somehow out of date — and prefer regenerating the master over silently diverging
 - Confirm concurrent / overlapping roles still carry the part-time consulting clarifier from `application-protocol.md`
 
 The parseability rules in `.claude/skills/resume-toolkit/reference/formatting-guide.md` still apply (single column, no icons, no layout tables, no header-region contact info). Don't add anti-parser elements when extending the HTML.
 
-### 7. Length and pruning
+### 8. Length and pruning
 
 - Target two pages for senior candidates (10+ years experience)
 - Reverse-chronological
@@ -137,17 +147,19 @@ The parseability rules in `.claude/skills/resume-toolkit/reference/formatting-gu
 - Consulting: apply the consulting protocol from `.claude/skills/resume-toolkit/reference/application-protocol.md` (consolidate short engagements; list 6+ month engagements with distinct scope as separate roles; clarify concurrent part-time work)
 - **Write for concision up front.** Keep each bullet to roughly one line and the summary to 3-4 sentences. `.claude/skills/resume-toolkit/scripts/lint_resume.py` flags bullets over ~150 chars as sprawling and over ~220 chars as a wall of text, and a summary over ~600 chars as bloated; treat those findings as rewrite prompts, not just warnings. Dense, single-idea bullets are the main defense against a two-page resume spilling onto a third.
 - Estimate length from the HTML content density (bullet counts, section sizes). Page-count verification happens at PDF-render time. If the resume runs long, the fix is cutting words here — not shrinking the CSS. The template's spacing is deliberately roomy so the page doesn't read as a wall of text; CSS tightening is `publish-resume`'s last resort (within fixed floors), never a substitute for concise writing.
+- **When space is tight, remove lower-value chronological bullets before removing provenance for a highlighted claim.** The chronological counterpart of a Relevant Highlight stays; cut weaker unrelated bullets first.
 
 ## Output
 
 One file in the job-application folder:
 
-1. **`Resume - <Company> - <Role>.html`** — the styled HTML, copied from the selected master and tailored. Section order (inherited from the master / template):
+1. **`Resume - <Company> - <Role>.html`** — the styled HTML, copied from the selected master and tailored. Section order (inherited from the master / template, with Relevant Highlights added during tailoring):
    1. Header — Name, **stable identity headline** (from the master / manifest, not the JD title), City/Region/Country, Phone, Email, LinkedIn URL (plain text). Pull name, location, phone, email, and LinkedIn from `Work Experience/personal-details.md` if refreshing.
    2. Summary — 3-4 sentences; first sentence keeps the stable identity; subsequent sentences emphasize role-relevant capabilities and 1-2 metrics
-   3. Work Experience — Reverse-chronological. `Mon YYYY - Mon YYYY` (or `Present`). Each role: title/employer, dates, location, bullets
-   4. Education — Degree, Major, Institution, Graduation Year. Pull from `Work Experience/personal-details.md`.
-   5. Skills — Comma-separated, organized by category, with purple-accent labels. Title this section exactly "Skills" so ATS parsers reliably detect it as a standard skills-section anchor.
+   3. Relevant Highlights — 2–3 compressed accomplishments selected from the master that most directly prove JD fit. Each names employer/project + measurable outcome. Fuller non-verbatim counterpart stays in chronology. (Added during tailoring; masters leave this block commented out.)
+   4. Work Experience — Reverse-chronological. `Mon YYYY - Mon YYYY` (or `Present`). Each role: title/employer, dates, location, bullets
+   5. Education — Degree, Major, Institution, Graduation Year. Pull from `Work Experience/personal-details.md`.
+   6. Skills — Comma-separated, organized by category, with purple-accent labels. Title this section exactly "Skills" so ATS parsers reliably detect it as a standard skills-section anchor.
 
 Do not render the PDF from this skill — that's `publish-resume`'s job.
 
@@ -155,11 +167,12 @@ Do not render the PDF from this skill — that's `publish-resume`'s job.
 
 - **Never invent skills, projects, or metrics.** If the user hasn't claimed it in their input, don't put it on the resume. Flag gaps for the user instead. Never add a JD-only skill on adjacency — exact-match terms in Skills must still be grounded in documented experience.
 - **Keep the stable identity.** Do not paste the JD's `Target Title` into `.role-line` or the summary's identity opener.
+- **Relevant Highlights are grounded compressions, not new claims.** Select 2–3 from the master; each must identify employer/project + measurable outcome; keep a fuller non-verbatim counterpart in chronology; never invent wording less grounded than the source.
 - **Layer exact-match vs. conventional terminology.** Put exact JD phrasing in the Skills section (grounded terms only). In bullets and summary, match the employer's concepts and conventional industry terminology — do not lift distinctive multi-word JD phrases or sentence structures. Dual-format each acronym once (usually in Skills); use the short form afterward.
 - **Bridge terminology when it differs.** When the master/notes use an internal term for a JD-required concept, make the mapping explicit rather than forcing reviewers to infer it or silently renaming the accomplishment.
 - **Quantify or cut.** Every bullet under a recent role should have a number or a concrete outcome. Bullets without either are filler — remove or rewrite. Write metrics as numerals with units/symbols (`50%`, `$2M`, `80k req/s`), never spelled out (`fifty percent`) or vague (`many`, `significant`, `roughly half`).
 - **No fluff words.** Strip "results-driven", "synergy", "rockstar", "team player". They cost space and signal nothing.
-- **Don't over-tailor.** Prefer omission over forced matching. Tailor via selection, ordering, project choice, summary emphasis, and skills ordering — minimize semantic rewrites of canonical accomplishments. A resume that looks mechanically reconstructed from the JD reads as over-tuned or AI-generated; preserve high-value keyword matching while hiding the optimization process itself.
+- **Don't over-tailor.** Prefer omission over forced matching. Tailor via selection, ordering, project choice, summary emphasis, Relevant Highlights, and skills ordering — minimize semantic rewrites of canonical accomplishments. A resume that looks mechanically reconstructed from the JD reads as over-tuned or AI-generated; preserve high-value keyword matching while hiding the optimization process itself.
 - **Output the full resume, not a diff.** Even for an update, produce the complete final document so the user can replace their working copy.
 - **Apply the AI-sounding patterns rules from `.claude/skills/resume-toolkit/reference/formatting-guide.md`.** That section is the source of truth for em-dashes, puffery on well-known entities, AI-favorite verbs ("leveraged", "utilized", "spearheaded"), tricolon openers, fast-paced-landscape framings, adjective stacking, and JD phrase echoing. A resume that reads as AI-written gets discarded.
 
@@ -174,6 +187,8 @@ Do not render the PDF from this skill — that's `publish-resume`'s job.
 Content:
 - [ ] Stable identity headline from the selected master / manifest appears in `.role-line` and the summary opener — **not** the JD's `Target Title`
 - [ ] Selected master is named in the chat response (which master, why)
+- [ ] Relevant Highlights section present with 2–3 items; each names employer/project + measurable outcome or technical proof
+- [ ] Each highlight has a fuller non-verbatim counterpart in its chronological role; no ungrounded claims or weaker-than-source wording
 - [ ] Every Required Skill the user genuinely has is covered (exact JD phrasing in Skills; conventional terminology in bullets) — no JD-only skills added on adjacency
 - [ ] Top 3-5 required concepts are embedded in recent-role bullets with metrics
 - [ ] No distinctive JD phrases or sentence structures echoed in bullets/summary (check the signal report's `Distinctive JD Phrases` denylist)

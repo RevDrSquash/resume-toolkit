@@ -57,6 +57,7 @@ Coverage gaps are the most involved fixes — some are real candidate gaps that 
 
 - [ ] **Stable identity.** Does the `.role-line` / summary opener use a stable professional identity from the selected master (or `resume-masters.md`), **not** a verbatim copy of the JD's target title? → Critical if the JD title was pasted in as the candidate's identity (the exact failure mode that reads as mechanical / AI-tailored). When the manifest is available, the identity should match the chosen master's headline.
 - [ ] **Target-title terminology.** Where the JD's `Target Title` / required phrasing maps accurately to real experience, does related terminology appear in skills or bullets (without changing the identity headline)? → Material if truthful mappings are missing; do **not** suggest rewriting the identity to match the JD title.
+- [ ] **Relevant Highlights selection.** If a Relevant Highlights section is present, are the 2–3 items among the strongest JD-fit evidence available in the master (including accomplishments that would otherwise be buried under older roles)? → Material if a clearly stronger grounded accomplishment was left buried while a weaker one was highlighted; Critical if the section is missing on a tailored resume that should have it.
 - [ ] **Required / must-have skills.** For each must-have skill or qualification in the JD, does it appear somewhere in the resume (Skills section or experience bullets)? → Critical for each missing one the user actually has. Reading the full JD here is the whole point: catch must-haves the signal report may have dropped or softened.
 - [ ] **Preferred / nice-to-have.** For each preferred or nice-to-have item, does it appear? → Material per missing item.
 - [ ] **Responsibility-to-bullet alignment.** For the JD's core responsibilities (or the signal report's `Action-Skill Pairs`), is there a recent-role bullet pairing the action with the skill, ideally with a metric? → Material per gap.
@@ -73,6 +74,7 @@ Coverage gaps the user *doesn't* have go in `Gaps to Address`, not the fix list 
 With coverage settled, check that what's included is well-represented. **Skip anything the linter catches** (AI-sounding patterns, fluff words, outdated tech, em-dashes, semicolons, repeated acronym expansions, JD phrase echoes when `--jd` is passed — those are Step 4). Focus here on what regex can't judge:
 
 - [ ] **Invented or unsupported claims.** Any metric, skill, scope, or outcome not backed by the user's input? → Critical. This is the most important manual check; the linter cannot do it.
+- [ ] **Relevant Highlights grounding and provenance.** For each highlight: is it grounded in the master/notes (Critical if not)? Does it identify employer/project + a measurable outcome or technical proof (Material if missing)? Is it a compressed (not verbatim) version of a chronological bullet that still exists (Material if duplicated verbatim or if chronological provenance was dropped)?
 - [ ] **Ungrounded exact-match skill.** Any Skills-section term that appears only because the JD asked for it, with no support in `Work Experience/` notes (or the master)? Adjacency is not grounding — related experience does not license inventing the JD's exact term. → Critical per ungrounded term.
 - [ ] **JD phrase echo.** Do bullets or the summary copy multiple distinctive multi-word phrases or sentence structures from the JD (or from the signal report's `Distinctive JD Phrases` denylist)? Exact terms belong in Skills when grounded; bullets should match concepts with conventional terminology. → Material; escalate to Critical if pervasive enough that the resume looks mechanically reconstructed from the posting.
 - [ ] **Missing terminology bridge.** Does the resume use an internal/canonical term for a JD-required concept without connecting it to the accurate industry/JD equivalent? Reviewers should not have to infer the mapping. → Material per missing bridge.
@@ -124,7 +126,7 @@ Then walk the formatting checklist (`formatting-guide.md`):
 - [ ] Contact info in body text, not document header space → Critical
 - [ ] No text boxes, tables, progress bars, icons replacing words → Critical
 - [ ] Standard fonts (Arial, Calibri, Times New Roman) → Material (only if known)
-- [ ] Section order: Header → Summary → Skills → Experience → Education → Certs → Material if reordered
+- [ ] Section order: Header → Summary → Relevant Highlights (tailored only) → Skills → Experience → Education → Certs → Material if reordered (styled HTML may place Skills after Experience; Relevant Highlights belongs after Summary when present)
 - [ ] Length: two pages for senior; one page for <3 years → Material
 - [ ] Acronyms dual-formatted once somewhere (expanded + acronym, usually in Skills); no repeated expansions of the same acronym → Minor
 

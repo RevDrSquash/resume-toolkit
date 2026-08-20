@@ -60,8 +60,9 @@ For each master:
 2. Fill from `Work Experience/` notes and `personal-details.md` only — never from a prior tailored resume under `Job Applications/`.
 3. Set the `.role-line` and the summary's opening identity to the manifest's **stable identity headline** verbatim. Do not invent a different identity per master beyond what the manifest specifies.
 4. Shape emphasis to the master's **purpose**: summary focus, skills ordering, which bullets lead each recent role, which projects surface. Chronology, employers, dates, titles, and grounded claims stay shared and truthful across masters; only emphasis and selection differ.
-5. Apply the consulting and **concurrent roles** rules from `application-protocol.md`. Overlapping date ranges must be unambiguous (e.g. part-time consulting alongside a full-time role) — label and clarify on the resume without adding consent/background-check detail.
-6. Apply formatting-guide rules (audience tone, metrics as numerals, AI-sounding patterns, length). Target two pages for senior candidates; write for concision up front.
+5. Leave the template's `Relevant Highlights` block **commented out** — that section is filled only during per-JD tailoring by `build-targeted-resume`.
+6. Apply the consulting and **concurrent roles** rules from `application-protocol.md`. Overlapping date ranges must be unambiguous (e.g. part-time consulting alongside a full-time role) — label and clarify on the resume without adding consent/background-check detail.
+7. Apply formatting-guide rules (audience tone, metrics as numerals, AI-sounding patterns, length). Target two pages for senior candidates; write for concision up front.
 
 No JD, no signal report, no title mirroring. Masters deliberately omit per-posting keyword swaps.
 
@@ -102,6 +103,7 @@ Resume Masters/
 - [ ] `Work Experience/resume-masters.md` exists and every entry has name, purpose, identity headline, and role-family cues
 - [ ] Every manifest entry has a matching `Resume Masters/Master Resume - <Name>.html`
 - [ ] Each master's `.role-line` and summary opener match that entry's identity headline verbatim
+- [ ] Relevant Highlights block remains commented out (filled only during per-JD tailoring)
 - [ ] No placeholder tokens (`[FULL NAME]`, etc.) remain from the template
 - [ ] Dates use one consistent `Mon YYYY` style across every role
 - [ ] Overlapping roles carry a part-time / consulting clarifier per `application-protocol.md`

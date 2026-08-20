@@ -46,7 +46,7 @@ print("\n".join(p.extract_text() for p in r.pages))
 
 Check:
 - Page count is 2 for senior candidates (10+ years), or 1 for candidates with under 3 years
-- Extracted text is in correct reading order (header → summary → experience → education → competencies)
+- Extracted text is in correct reading order (header → summary → Relevant Highlights when present → experience → education → skills)
 - Dates render as `Mon YYYY` (not garbled, not split across lines)
 - Zero U+FFFD replacement characters
 - No raw HTML or CSS tokens leaked into the text layer
@@ -54,7 +54,7 @@ Check:
 ### 4. Fix oversize — content first, CSS last
 If the rendered PDF is 3 pages when it should be 2 (or 2 pages when it should be 1), fix it in this order. A resume should earn its length by being concise, not by being crammed into a smaller font — cramming is what produces the wall-of-text look the template is tuned to avoid.
 
-1. **Tighten content first (strongly preferred).** Kick back to `build-targeted-resume` — or ask the user — to shorten the text: cut the longest bullets to a single line, drop the weakest bullet from the most-bulleted role, trim the summary toward 3 sentences, and remove low-signal qualifiers. Running `python .claude/skills/resume-toolkit/scripts/lint_resume.py "<html>"` points straight at what to cut: the `bullet-too-long`, `bullet-over-ideal`, and `summary-too-long` findings are the over-length offenders. A 3-page resume should almost always be fixed here.
+1. **Tighten content first (strongly preferred).** Kick back to `build-targeted-resume` — or ask the user — to shorten the text: cut the longest bullets to a single line, drop the weakest bullet from the most-bulleted role, trim the summary toward 3 sentences, and remove low-signal qualifiers. Prefer dropping lower-value chronological bullets over removing a highlighted claim's chronological provenance (the fuller counterpart of a Relevant Highlight). Running `python .claude/skills/resume-toolkit/scripts/lint_resume.py "<html>"` points straight at what to cut: the `bullet-too-long`, `bullet-over-ideal`, and `summary-too-long` findings are the over-length offenders. A 3-page resume should almost always be fixed here.
 2. **CSS tightening — last resort, near-misses only.** If the content is already tight and the overflow is just a few lines, nudge the `<style>` block. Never go below the template's floors:
    - body `font-size`: 10pt → down to **9.5pt** (floor)
    - `line-height`: 1.4 → down to **1.25** (floor)
