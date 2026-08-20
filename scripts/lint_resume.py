@@ -720,12 +720,22 @@ def _normalize_words(text: str) -> List[str]:
 
 
 def _body_text_excluding_skills(raw: str, suffix: str, full_text: str) -> str:
-    """Resume body text with the Skills section removed when detectable."""
+    """Mask the Skills section while preserving the resume's line positions."""
     if suffix in {".html", ".htm"}:
-        stripped = _SKILLS_SECTION_HTML.sub("\n", raw)
-        return html_to_text(stripped)
+        match = _SKILLS_SECTION_HTML.search(raw)
+        if not match:
+            return full_text
+        skills_text = html_to_text(match.group(0))
+        start = full_text.find(skills_text)
+        if start < 0:
+            return full_text
+        masked = re.sub(r"[^\n]", " ", skills_text)
+        return full_text[:start] + masked + full_text[start + len(skills_text) :]
     if suffix == ".md":
-        return _SKILLS_SECTION_MD.sub("\n", raw)
+        return _SKILLS_SECTION_MD.sub(
+            lambda match: re.sub(r"[^\n]", " ", match.group(0)),
+            raw,
+        )
     return full_text
 
 
@@ -733,91 +743,47 @@ def lint_jd_phrase_echo(
     resume_body: str, jd_text: str
 ) -> List[Finding]:
     """Flag word n-grams of length >= JD_PHRASE_MIN_WORDS shared with the JD."""
-    resume_words = _normalize_words(resume_body)
-    jd_words = _normalize_words(jd_text)
-    if len(resume_words) < JD_PHRASE_MIN_WORDS or len(jd_words) < JD_PHRASE_MIN_WORDS:
-        return []
-
-    max_n = min(12, len(jd_words), len(resume_words))
     jd_ngrams: Set[Tuple[str, ...]] = set()
-    for n in range(JD_PHRASE_MIN_WORDS, max_n + 1):
-        for i in range(len(jd_words) - n + 1):
-            jd_ngrams.add(tuple(jd_words[i : i + n]))
+    for line in jd_text.splitlines():
+        words = _normalize_words(line)
+        max_n = min(12, len(words))
+        for n in range(JD_PHRASE_MIN_WORDS, max_n + 1):
+            for i in range(len(words) - n + 1):
+                jd_ngrams.add(tuple(words[i : i + n]))
 
-    # Prefer longest matches: scan resume for n-grams longest-first and skip
-    # overlapping shorter echoes that share word indices with an already-flagged span.
-    covered: Set[int] = set()
-    candidates: List[Tuple[int, int, Tuple[str, ...]]] = []  # start, end, gram
-
-    for n in range(max_n, JD_PHRASE_MIN_WORDS - 1, -1):
-        for i in range(len(resume_words) - n + 1):
-            if any(idx in covered for idx in range(i, i + n)):
-                continue
-            gram = tuple(resume_words[i : i + n])
-            if gram not in jd_ngrams:
-                continue
-            covered.update(range(i, i + n))
-            candidates.append((i, i + n, gram))
-
-    if not candidates:
+    if not jd_ngrams:
         return []
 
-    line_starts = [0]
-    for i, ch in enumerate(resume_body):
-        if ch == "\n":
-            line_starts.append(i + 1)
-
-    def offset_to_line(offset: int) -> int:
-        lo, hi = 0, len(line_starts) - 1
-        while lo < hi:
-            mid = (lo + hi + 1) // 2
-            if line_starts[mid] <= offset:
-                lo = mid
-            else:
-                hi = mid - 1
-        return lo + 1
-
-    def line_at(line_number: int) -> str:
-        start = line_starts[line_number - 1]
-        end = (
-            line_starts[line_number] - 1
-            if line_number < len(line_starts)
-            else len(resume_body)
-        )
-        return resume_body[start:end]
-
-    # Locate each candidate in document order via successive regex searches so
-    # repeated echoes (summary + bullet) get distinct line numbers.
+    # Match within logical lines only. Newlines delimit headings, paragraphs,
+    # and bullets, so joining tokens across them creates phrases that do not
+    # actually appear in either document.
     findings: List[Finding] = []
-    search_from = 0
-    # Sort by word-index start so we advance through the body left-to-right.
-    for _start, _end, gram in sorted(candidates, key=lambda c: c[0]):
-        phrase = " ".join(gram)
-        pat = re.compile(
-            r"\b" + r"\W+".join(re.escape(w) for w in gram) + r"\b",
-            re.IGNORECASE,
-        )
-        m = pat.search(resume_body, search_from)
-        if not m:
-            # Fallback: search from the start (tokenization drift).
-            m = pat.search(resume_body)
-        if m:
-            line_number = offset_to_line(m.start())
-            excerpt = line_at(line_number).strip()
-            search_from = m.end()
-        else:
-            line_number = 1
-            excerpt = phrase
-        if len(excerpt) > 200:
-            excerpt = excerpt[:197] + "..."
-        findings.append(
-            Finding(
-                rule=_RULE_JD_PHRASE_ECHO,
-                line_number=line_number,
-                matched_text=phrase,
-                line_excerpt=excerpt,
-            )
-        )
+    for line_number, line in enumerate(resume_body.splitlines(), start=1):
+        words = _normalize_words(line)
+        if len(words) < JD_PHRASE_MIN_WORDS:
+            continue
+
+        covered: Set[int] = set()
+        max_n = min(12, len(words))
+        for n in range(max_n, JD_PHRASE_MIN_WORDS - 1, -1):
+            for i in range(len(words) - n + 1):
+                if any(idx in covered for idx in range(i, i + n)):
+                    continue
+                gram = tuple(words[i : i + n])
+                if gram not in jd_ngrams:
+                    continue
+                covered.update(range(i, i + n))
+                excerpt = line.strip()
+                if len(excerpt) > 200:
+                    excerpt = excerpt[:197] + "..."
+                findings.append(
+                    Finding(
+                        rule=_RULE_JD_PHRASE_ECHO,
+                        line_number=line_number,
+                        matched_text=" ".join(gram),
+                        line_excerpt=excerpt,
+                    )
+                )
 
     return findings
 
