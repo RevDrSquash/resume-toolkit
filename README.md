@@ -1,10 +1,9 @@
 # resume-toolkit
 
 A [Claude Code](https://code.claude.com) **skills-directory plugin** for end-to-end resume
-tailoring and job-application tracking. It can discover matching postings via a local
-OpenPostings backend, parse a job description into a signal report,
-draft an ATS-optimized resume, review it against the JD, render an ATS-parseable PDF,
-and keep a job-applications tracker in sync.
+tailoring and job-application tracking. It parses a job description into a signal report,
+drafts an ATS-optimized resume, reviews it against the JD, renders an ATS-parseable PDF,
+and keeps a job-applications tracker in sync.
 
 > ⚠️ **Heads-up: this is currently coupled to its author's workspace.** Several skills read
 > from `Work Experience/` and `Job Applications/` directories at the project root, and the
@@ -19,29 +18,13 @@ Once loaded, the skills are namespaced under `resume-toolkit:`.
 
 | Skill | What it does |
 |---|---|
-| `resume-toolkit:job-application` | Orchestrates the full workflow end-to-end for one posting (including shortlist handoff). |
-| `resume-toolkit:job-scout` | Discovers new postings via OpenPostings saved searches; writes a ranked shortlist. Prefer the `job-scout` subagent. |
-| `resume-toolkit:fetch-job-description` | Fetches exact JD markdown (OpenPostings CLI first; raw-HTML / LinkedIn fallbacks). |
-| `resume-toolkit:generate-match-profile` | Builds `Work Experience/match-profile.md` + `Job Applications/scout-searches.json` for discovery. |
+| `resume-toolkit:job-application` | Orchestrates the full workflow end-to-end for one posting. |
+| `resume-toolkit:fetch-job-description` | Fetches exact JD markdown (HTTP extraction; LinkedIn routed to its own skill). |
 | `resume-toolkit:extract-job-signals` | Parses a JD into a structured signal report (required/nice-to-have skills, title to mirror, knockout questions). |
 | `resume-toolkit:build-targeted-resume` | Builds a tailored, ATS-optimized resume as styled HTML. |
 | `resume-toolkit:review-resume` | Scores a resume against a JD and produces a prioritized list of fixes. |
 | `resume-toolkit:publish-resume` | Renders the resume HTML to an ATS-parseable PDF and verifies it. |
 | `resume-toolkit:update-application-tracker` | Reads/updates the job-applications tracker dashboard. |
-
-## Job discovery (OpenPostings)
-
-Discovery is **optional** and additive. Manual JD paste/file/URL still works.
-
-1. Install and run a local OpenPostings backend; put the CLI on PATH (`npm link` from your CLI fork).
-2. From the Career workspace root: `openpostings skills install --claude` (installs `openpostings-cli`, `-search`, `-jd`, `-track` — do not duplicate those docs inside this plugin).
-3. Run `generate-match-profile` once (seeds `match-profile.md` + `scout-searches.json`).
-4. Run `job-scout` (subagent) to produce `Job Applications/Shortlist - <date>.md`.
-5. Pick a shortlist entry and run `job-application` — it reuses the cached JD under `Job Applications/_Scout/` and continues through signals → resume → publish as before.
-
-On confirmed submission, `job-application` also runs `openpostings applied <url>` so future scouts skip that posting. `Job Applications/index.html` remains the only canonical status tracker.
-
-If the CLI or backend is down, discovery and applied/ignore write-backs degrade with a clear message; URL fetch falls back to HTTP / LinkedIn where possible.
 
 ## Install
 
