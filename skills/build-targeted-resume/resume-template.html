@@ -53,6 +53,13 @@
     font-size: 10pt;
     line-height: 1.4;
     background: #fff;
+    /* Chromium substitutes fi/fl ligature glyphs by default, and if the
+       embedded font subset lacks a correct ToUnicode mapping for them,
+       PDF text extraction returns the ligature codepoint instead of "fi"/
+       "fl" (e.g. "workflows" -> "workﬂows"), silently breaking ATS keyword
+       matches. Disable ligature substitution so extracted text stays plain ASCII. */
+    font-variant-ligatures: none;
+    -webkit-font-variant-ligatures: none;
   }
   .page { max-width: 7.3in; margin: 0.55in auto; padding: 0; }
   @media print { .page { margin: 0; } }
